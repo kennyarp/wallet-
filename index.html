@@ -596,8 +596,13 @@ textarea { resize: none; min-height: 80px; }
   <!-- ═══════════════════ PAGE: IA CONSEILLER ═══════════════════ -->
   <div class="page" id="page-ai">
     <div class="page-header" style="flex-direction:column;align-items:flex-start;">
-      <h1>IA Conseiller 🤖</h1>
-      <p style="font-size:12px;color:var(--text-3);margin-top:4px;">Propulsé par Groq · Llama 3</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+        <div>
+          <h1>IA Conseiller 🤖</h1>
+          <p style="font-size:12px;color:var(--text-3);margin-top:4px;">Groq · Llama 3 · Accès complet à tes données</p>
+        </div>
+        <button onclick="clearAIChat()" style="font-size:11px;padding:6px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-3);cursor:pointer;">🗑 Vider</button>
+      </div>
     </div>
     <div style="padding:0 16px 16px;">
       <!-- API Key -->
@@ -610,19 +615,33 @@ textarea { resize: none; min-height: 80px; }
         <p style="font-size:11px;color:var(--text-3);margin-top:8px;">Obtiens ta clé sur <strong style="color:var(--violet-soft);">console.groq.com</strong> — c'est gratuit</p>
       </div>
 
+      <!-- Ce que l'IA peut faire -->
+      <div style="background:var(--violet-dim);border:1px solid rgba(124,58,237,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--violet-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">⚡ L'IA peut créer directement</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">💰 Revenus</span>
+          <span style="font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">💸 Dépenses</span>
+          <span style="font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">🎯 Objectifs</span>
+          <span style="font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">📊 Budgets</span>
+          <span style="font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">💳 Dettes</span>
+        </div>
+      </div>
+
       <!-- Suggestions rapides -->
       <div class="chip-group" id="ai-chips"></div>
 
       <!-- Chat -->
-      <div class="card" style="padding:12px;">
-        <div class="ai-messages" id="ai-messages">
-          <div class="msg msg-ai">Salut ! 👋 Je suis ton conseiller financier IA. Renseigne ta clé Groq API et je peux analyser tes finances et te donner des conseils personnalisés. Tu peux aussi me poser n'importe quelle question sur la gestion d'argent.</div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+        <div class="ai-messages" id="ai-messages" style="max-height:55vh;">
+          <div class="msg msg-ai">Salut ! 👋 Je suis ton conseiller financier IA avec <strong>accès complet à tes données</strong>.<br><br>Je peux analyser tes finances ET créer directement des éléments pour toi. Dis-moi par exemple :<br>• <em>"J'ai dépensé 500 HTG en transport"</em><br>• <em>"Crée un objectif d'épargne pour un téléphone à 15000 HTG"</em><br>• <em>"Mets un budget alimentation de 3000 HTG"</em><br>• <em>"Analyse mes dépenses et donne-moi un plan"</em></div>
         </div>
-        <div class="ai-input-row">
-          <textarea id="ai-input" placeholder="Pose-moi une question..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI();}"></textarea>
-          <button class="ai-send" onclick="sendAI()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-          </button>
+        <div style="padding:10px;border-top:1px solid var(--border);">
+          <div class="ai-input-row">
+            <textarea id="ai-input" placeholder="Dis-moi ce que tu veux faire ou créer..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI();}"></textarea>
+            <button class="ai-send" onclick="sendAI()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -1655,6 +1674,211 @@ ${budgetsDetail}
 L'utilisateur peut te demander de créer des objectifs, analyser ses dépenses, calculer des délais, ou tout autre conseil financier. Sois précis et utilise les chiffres réels ci-dessus dans ta réponse.`;
 }
 
+// ═══════════════════════════════════════════════════════════════
+//  AI TOOLS — fonctions que l'IA peut appeler directement
+// ═══════════════════════════════════════════════════════════════
+const AI_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'ajouter_transaction',
+      description: 'Ajoute une transaction (revenu ou dépense) dans le portefeuille',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['income', 'expense'], description: 'Type: income (revenu) ou expense (dépense)' },
+          amount: { type: 'number', description: 'Montant en chiffres' },
+          category: { type: 'string', description: 'Catégorie. Revenus: Salaire, Freelance, Parents, Bourse, Vente, Remboursement, Emprunt reçu, Autre. Dépenses: Alimentation, Transport, Logement, Santé, Internet, Téléphone, Électricité, Shopping, Loisirs, Streaming, Carte en ligne, Éducation, Épargne, Remboursement dette, Autre' },
+          note: { type: 'string', description: 'Note ou raison de la transaction' },
+          date: { type: 'string', description: 'Date au format YYYY-MM-DD, laisser vide pour aujourd\'hui' },
+        },
+        required: ['type', 'amount', 'category'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'creer_objectif',
+      description: 'Crée un objectif d\'épargne',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Nom de l\'objectif' },
+          target: { type: 'number', description: 'Montant cible' },
+          emoji: { type: 'string', description: 'Emoji représentatif (ex: 📱, 🏠, ✈️)' },
+          initial_saved: { type: 'number', description: 'Montant déjà épargné, 0 par défaut' },
+          deadline: { type: 'string', description: 'Date limite YYYY-MM-DD (optionnel)' },
+        },
+        required: ['name', 'target'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'creer_budget',
+      description: 'Crée ou met à jour un budget mensuel pour une catégorie',
+      parameters: {
+        type: 'object',
+        properties: {
+          category: { type: 'string', description: 'Catégorie: Alimentation, Transport, Logement, Santé, Internet, Téléphone, Électricité, Shopping, Loisirs, Streaming, Éducation, Autre' },
+          limit: { type: 'number', description: 'Limite mensuelle en chiffres' },
+        },
+        required: ['category', 'limit'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'ajouter_dette',
+      description: 'Enregistre une dette ou créance (affecte le solde)',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['owed_by_me', 'owed_to_me'], description: 'owed_by_me = je dois, owed_to_me = on me doit' },
+          amount: { type: 'number', description: 'Montant' },
+          person: { type: 'string', description: 'Nom de la personne ou organisme' },
+          reason: { type: 'string', description: 'Raison ou description' },
+          due: { type: 'string', description: 'Date d\'échéance YYYY-MM-DD (optionnel)' },
+        },
+        required: ['type', 'amount', 'person'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'deposer_dans_objectif',
+      description: 'Ajoute de l\'épargne dans un objectif existant',
+      parameters: {
+        type: 'object',
+        properties: {
+          goal_name: { type: 'string', description: 'Nom (ou partie du nom) de l\'objectif' },
+          amount: { type: 'number', description: 'Montant à ajouter' },
+        },
+        required: ['goal_name', 'amount'],
+      },
+    },
+  },
+];
+
+// Exécute un tool call de l'IA
+function executeAITool(name, args) {
+  const cur = data.profile.currency || 'HTG';
+  const today = new Date().toISOString().split('T')[0];
+
+  if (name === 'ajouter_transaction') {
+    const tx = {
+      id: Date.now(),
+      type: args.type,
+      amount: parseFloat(args.amount),
+      date: args.date || today,
+      category: args.category,
+      note: args.note || '',
+      currency: cur,
+    };
+    data.transactions.unshift(tx);
+    save();
+    if (currentPage === 'home') renderHome();
+    if (currentPage === 'transactions') renderTransactions();
+    const sign = args.type === 'income' ? '+' : '-';
+    return `✅ Transaction créée : ${sign}${fmtNum(args.amount)} ${cur} · ${args.category}${args.note ? ' (' + args.note + ')' : ''}`;
+  }
+
+  if (name === 'creer_objectif') {
+    const goal = {
+      id: Date.now(),
+      name: args.name,
+      emoji: args.emoji || '🎯',
+      target: parseFloat(args.target),
+      saved: parseFloat(args.initial_saved || 0),
+      deadline: args.deadline || null,
+      createdAt: today,
+      currency: cur,
+    };
+    data.goals.unshift(goal);
+    save();
+    if (currentPage === 'goals') renderGoals();
+    if (currentPage === 'home') renderHome();
+    return `✅ Objectif créé : ${goal.emoji} ${goal.name} — cible ${fmtNum(goal.target)} ${cur}${goal.deadline ? ' · délai ' + goal.deadline : ''}`;
+  }
+
+  if (name === 'creer_budget') {
+    const existing = data.budgets.find(b => b.category === args.category);
+    if (existing) {
+      existing.limit = parseFloat(args.limit);
+    } else {
+      data.budgets.push({ id: Date.now(), category: args.category, limit: parseFloat(args.limit) });
+    }
+    save();
+    if (currentPage === 'budgets') renderBudgets();
+    if (currentPage === 'home') renderHome();
+    return `✅ Budget ${existing ? 'mis à jour' : 'créé'} : ${args.category} → ${fmtNum(args.limit)} ${cur}/mois`;
+  }
+
+  if (name === 'ajouter_dette') {
+    const debt = {
+      id: Date.now(),
+      type: args.type,
+      amount: parseFloat(args.amount),
+      person: args.person,
+      reason: args.reason || '',
+      date: today,
+      due: args.due || '',
+      paid: false,
+      currency: cur,
+      affectsBalance: true,
+    };
+    data.debts.unshift(debt);
+    // Impact sur le solde
+    const balanceTx = {
+      id: Date.now() + 1,
+      type: args.type === 'owed_to_me' ? 'income' : 'expense',
+      amount: parseFloat(args.amount),
+      date: today,
+      category: args.type === 'owed_to_me' ? 'Emprunt reçu' : 'Remboursement dette',
+      note: `${args.type === 'owed_to_me' ? '🟢' : '🔴'} ${args.person}${args.reason ? ' — ' + args.reason : ''} (auto)`,
+      currency: cur,
+      debtRef: debt.id,
+    };
+    data.transactions.unshift(balanceTx);
+    save();
+    if (currentPage === 'home') renderHome();
+    if (currentPage === 'transactions') renderTransactions();
+    const label = args.type === 'owed_by_me' ? `Je dois ${fmtNum(args.amount)} ${cur} à ${args.person}` : `${args.person} me doit ${fmtNum(args.amount)} ${cur}`;
+    return `✅ Dette enregistrée : ${label}${args.reason ? ' (' + args.reason + ')' : ''} · solde ajusté`;
+  }
+
+  if (name === 'deposer_dans_objectif') {
+    const goal = data.goals.find(g => g.name.toLowerCase().includes(args.goal_name.toLowerCase()));
+    if (!goal) return `❌ Objectif "${args.goal_name}" introuvable. Objectifs disponibles : ${data.goals.map(g => g.name).join(', ') || 'aucun'}`;
+    goal.saved = Math.min(goal.saved + parseFloat(args.amount), goal.target);
+    save();
+    if (currentPage === 'goals') renderGoals();
+    if (currentPage === 'home') renderHome();
+    const pct = Math.round((goal.saved / goal.target) * 100);
+    return `✅ ${fmtNum(args.amount)} ${cur} ajouté à "${goal.name}" · ${fmtNum(goal.saved)}/${fmtNum(goal.target)} (${pct}%)${pct >= 100 ? ' 🎉 OBJECTIF ATTEINT !' : ''}`;
+  }
+
+  return `❌ Outil inconnu : ${name}`;
+}
+
+function renderToolResult(result) {
+  const div = document.createElement('div');
+  div.style.cssText = 'margin:6px 0;padding:10px 12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:10px;font-size:13px;color:var(--green);';
+  div.textContent = result;
+  document.getElementById('ai-messages').appendChild(div);
+  document.getElementById('ai-messages').scrollTop = 99999;
+}
+
+function clearAIChat() {
+  aiHistory = [];
+  const el = document.getElementById('ai-messages');
+  el.innerHTML = '<div class="msg msg-ai">Chat vidé. Comment puis-je t\'aider ?</div>';
+}
+
 async function sendAI() {
   const input = document.getElementById('ai-input');
   const msg = input.value.trim();
@@ -1665,7 +1889,6 @@ async function sendAI() {
   appendAIMsg('user', msg);
   aiHistory.push({ role: 'user', content: msg });
 
-  // Typing indicator
   const typing = document.createElement('div');
   typing.className = 'msg msg-ai msg-typing';
   typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
@@ -1675,17 +1898,16 @@ async function sendAI() {
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + data.groqKey,
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.groqKey },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: buildFinanceContext() },
-          ...aiHistory.slice(-8),
+          ...aiHistory.slice(-10),
         ],
-        max_tokens: 400,
+        tools: AI_TOOLS,
+        tool_choice: 'auto',
+        max_tokens: 600,
         temperature: 0.7,
       }),
     });
@@ -1694,15 +1916,58 @@ async function sendAI() {
     typing.remove();
 
     if (!res.ok) {
-      const errMsg = json.error?.message || 'Erreur API';
-      appendAIMsg('assistant', '❌ ' + errMsg);
+      appendAIMsg('assistant', '❌ ' + (json.error?.message || 'Erreur API'));
       aiHistory.pop();
       return;
     }
 
-    const reply = json.choices?.[0]?.message?.content || 'Pas de réponse.';
-    aiHistory.push({ role: 'assistant', content: reply });
-    appendAIMsg('assistant', reply);
+    const choice = json.choices?.[0];
+    const assistantMsg = choice?.message;
+
+    // Handle tool calls
+    if (assistantMsg?.tool_calls?.length) {
+      // Show text part if any
+      if (assistantMsg.content) appendAIMsg('assistant', assistantMsg.content);
+
+      // Build tool_results messages for follow-up
+      const toolResults = [];
+      for (const tc of assistantMsg.tool_calls) {
+        let args = {};
+        try { args = JSON.parse(tc.function.arguments); } catch {}
+        const result = executeAITool(tc.function.name, args);
+        renderToolResult(result);
+        toolResults.push({ role: 'tool', tool_call_id: tc.id, content: result });
+      }
+
+      // Follow-up call so IA confirms what it did
+      aiHistory.push({ role: 'assistant', content: assistantMsg.content || '', tool_calls: assistantMsg.tool_calls });
+      toolResults.forEach(r => aiHistory.push(r));
+
+      const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.groqKey },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: buildFinanceContext() },
+            ...aiHistory.slice(-12),
+          ],
+          max_tokens: 300,
+          temperature: 0.7,
+        }),
+      });
+      const json2 = await res2.json();
+      const reply2 = json2.choices?.[0]?.message?.content;
+      if (reply2) {
+        appendAIMsg('assistant', reply2);
+        aiHistory.push({ role: 'assistant', content: reply2 });
+      }
+    } else {
+      // Normal text reply
+      const reply = assistantMsg?.content || 'Pas de réponse.';
+      aiHistory.push({ role: 'assistant', content: reply });
+      appendAIMsg('assistant', reply);
+    }
   } catch (err) {
     typing.remove();
     appendAIMsg('assistant', '❌ Erreur de connexion. Vérifie ta clé API et ta connexion internet.');
@@ -2321,4 +2586,4 @@ applyTheme();
 if (data.groqKey) document.getElementById('groq-key').value = '••••••••••••••••';
 </script>
 </body>
-</html>
+  </html>
