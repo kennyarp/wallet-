@@ -1,0 +1,2324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Wallet — Portefeuille Intelligent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A0A0F;
+  --surface: #12121A;
+  --surface2: #1A1A26;
+  --border: #2A2A3E;
+  --violet: #7C3AED;
+  --violet-soft: #9D5CF6;
+  --violet-dim: rgba(124,58,237,0.15);
+  --green: #10B981;
+  --green-dim: rgba(16,185,129,0.12);
+  --red: #EF4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --amber: #F59E0B;
+  --amber-dim: rgba(245,158,11,0.12);
+  --text: #F1F0FF;
+  --text-2: #9B9BB4;
+  --text-3: #5A5A72;
+  --radius: 14px;
+  --radius-sm: 8px;
+  --nav-h: 72px;
+  --font-num: 'Space Grotesk', sans-serif;
+  --font: 'Inter', sans-serif;
+}
+[data-theme="light"] {
+  --bg: #F4F4F8;
+  --surface: #FFFFFF;
+  --surface2: #EEEEF4;
+  --border: #DDDDE8;
+  --violet: #7C3AED;
+  --violet-soft: #6D28D9;
+  --violet-dim: rgba(124,58,237,0.10);
+  --green: #059669;
+  --green-dim: rgba(5,150,105,0.10);
+  --red: #DC2626;
+  --red-dim: rgba(220,38,38,0.10);
+  --amber: #D97706;
+  --amber-dim: rgba(217,119,6,0.10);
+  --text: #0F0F1A;
+  --text-2: #4B4B65;
+  --text-3: #9999B0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.5; overscroll-behavior: none; }
+body { display: flex; flex-direction: column; max-width: 480px; margin: 0 auto; position: relative; overflow-x: hidden; }
+
+/* ── SCROLLABLE MAIN ── */
+#app { flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: calc(var(--nav-h) + 36px); scroll-behavior: smooth; }
+.page { display: none; padding: 16px; min-height: calc(100vh - var(--nav-h)); }
+.page.active { display: block; }
+
+/* ── HEADER ── */
+.page-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 16px 8px; }
+.page-header h1 { font-family: var(--font-num); font-size: 20px; font-weight: 600; }
+.header-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600; letter-spacing: .04em; }
+
+/* ── BOTTOM NAV — iOS Glassmorphism ── */
+#bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: calc(100% - 24px); max-width: 456px;
+  height: var(--nav-h);
+  background: rgba(14, 14, 22, 0.72);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 28px;
+  bottom: 12px;
+  display: flex; align-items: center; justify-content: space-around;
+  padding: 0 6px 0; z-index: 100;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  flex: 1; padding: 10px 0; cursor: pointer; border: none; background: none;
+  color: rgba(155,155,180,0.7); transition: color .25s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+.nav-item.active { color: #fff; }
+.nav-item svg { width: 22px; height: 22px; transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
+.nav-item.active svg { transform: scale(1.12); }
+.nav-item span { font-size: 9.5px; font-weight: 600; letter-spacing: .04em; transition: opacity .2s; }
+.nav-item:not(.active) span { opacity: 0.6; }
+/* Active indicator dot */
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  width: 4px; height: 4px;
+  background: var(--violet-soft);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--violet);
+}
+
+/* ── CARDS ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+.card-sm { padding: 12px 14px; }
+.card-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); margin-bottom: 12px; }
+
+/* hero-card defined below in MISC section */
+.hero-label { font-size: 11px; color: var(--text-3); font-weight: 500; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+.hero-amount { font-family: var(--font-num); font-size: 42px; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+.hero-amount .currency { font-size: 20px; font-weight: 400; color: var(--text-2); margin-right: 2px; }
+.hero-sub { display: flex; gap: 16px; margin-top: 16px; }
+.hero-stat { flex: 1; }
+.hero-stat-label { font-size: 10px; color: var(--text-3); font-weight: 500; }
+.hero-stat-val { font-family: var(--font-num); font-size: 15px; font-weight: 600; margin-top: 2px; }
+.pos { color: var(--green); }
+.neg { color: var(--red); }
+.neu { color: var(--amber); }
+
+/* ── HEALTH RING ── */
+.health-wrap { display: flex; align-items: center; gap: 20px; padding: 4px 0; }
+.ring-container { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+.ring-container svg { transform: rotate(-90deg); }
+.ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring-score { font-family: var(--font-num); font-size: 22px; font-weight: 700; }
+.ring-label { font-size: 9px; color: var(--text-3); font-weight: 500; text-transform: uppercase; }
+.health-info { flex: 1; }
+.health-title { font-family: var(--font-num); font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.health-desc { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+
+/* ── QUICK ACTIONS ── */
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.quick-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 4px; cursor: pointer; transition: border-color .2s, background .2s; }
+.quick-btn:active { background: var(--surface2); border-color: var(--violet); }
+.quick-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.quick-btn span { font-size: 10px; font-weight: 500; color: var(--text-2); text-align: center; }
+
+/* ── TRANSACTIONS ── */
+.tx-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.tx-item:last-child { border-bottom: none; }
+.tx-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.tx-info { flex: 1; min-width: 0; }
+.tx-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-date { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.tx-cat { font-size: 10px; color: var(--text-3); background: var(--surface2); padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 2px; }
+.tx-amount { font-family: var(--font-num); font-size: 15px; font-weight: 600; text-align: right; flex-shrink: 0; }
+
+/* ── FORMS ── */
+.form-group { margin-bottom: 14px; }
+label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 6px; letter-spacing: .03em; }
+input, select, textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px; color: var(--text);
+  font-family: var(--font); font-size: 15px; outline: none; transition: border-color .2s;
+  appearance: none; -webkit-appearance: none;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--violet); }
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239B9BB4' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 38px; }
+textarea { resize: none; min-height: 80px; }
+.input-prefix { position: relative; }
+.input-prefix span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 15px; pointer-events: none; }
+.input-prefix input { padding-left: 28px; }
+
+/* ── BUTTONS ── */
+.btn { width: 100%; padding: 14px; border-radius: var(--radius-sm); border: none; font-family: var(--font); font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity .2s, transform .1s; }
+.btn:active { transform: scale(.98); opacity: .9; }
+.btn-primary { background: var(--violet); color: #fff; }
+.btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.25); }
+.btn-sm { padding: 8px 16px; width: auto; font-size: 13px; border-radius: 8px; }
+
+/* ── TABS ── */
+.tabs { display: flex; background: var(--surface2); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 16px; gap: 2px; }
+.tab { flex: 1; padding: 8px; text-align: center; font-size: 13px; font-weight: 500; border-radius: 6px; cursor: pointer; color: var(--text-3); border: none; background: none; transition: all .2s; }
+.tab.active { background: var(--violet); color: #fff; }
+
+/* ── PROGRESS BAR ── */
+.progress-bar { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width .5s ease; }
+
+/* ── BUDGET ITEM ── */
+.budget-item { margin-bottom: 14px; }
+.budget-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.budget-name { font-size: 13px; font-weight: 500; }
+.budget-amounts { font-family: var(--font-num); font-size: 12px; color: var(--text-3); }
+
+/* ── CHIPS ── */
+.chip-group { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.chip { padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: var(--surface2); color: var(--text-2); cursor: pointer; transition: all .15s; }
+.chip.selected { background: var(--violet-dim); border-color: var(--violet); color: var(--violet-soft); }
+
+/* ── AI CHAT ── */
+.ai-messages { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; min-height: 200px; max-height: 50vh; overflow-y: auto; padding: 4px; }
+.msg { max-width: 88%; padding: 12px 14px; border-radius: 16px; font-size: 14px; line-height: 1.55; }
+.msg-ai { background: var(--surface2); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 4px; }
+.msg-user { background: var(--violet); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+.msg-typing { display: flex; gap: 4px; align-items: center; padding: 14px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); animation: bounce 1.2s infinite; }
+.dot:nth-child(2) { animation-delay: .2s; }
+.dot:nth-child(3) { animation-delay: .4s; }
+@keyframes bounce { 0%,60%,100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+.ai-input-row { display: flex; gap: 8px; align-items: flex-end; }
+.ai-input-row textarea { flex: 1; min-height: 44px; max-height: 120px; padding: 12px; font-size: 14px; border-radius: 12px; }
+.ai-send { width: 44px; height: 44px; border-radius: 12px; background: var(--violet); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.ai-key-row { display: flex; gap: 8px; align-items: center; }
+.ai-key-row input { flex: 1; font-size: 13px; }
+.ai-key-row .btn-sm { flex-shrink: 0; }
+
+/* ── PROFILE ── */
+.profile-header { display: flex; flex-direction: column; align-items: center; padding: 28px 0 20px; }
+.avatar { width: 72px; height: 72px; border-radius: 50%; background: var(--violet-dim); border: 2px solid var(--violet); display: flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 12px; }
+.profile-name { font-family: var(--font-num); font-size: 20px; font-weight: 600; }
+.profile-type { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+.stat-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+.stat-box-val { font-family: var(--font-num); font-size: 18px; font-weight: 700; }
+.stat-box-label { font-size: 10px; color: var(--text-3); margin-top: 2px; font-weight: 500; }
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.setting-row:last-child { border-bottom: none; }
+.setting-label { font-size: 14px; }
+.setting-value { font-size: 13px; color: var(--text-3); display: flex; align-items: center; gap: 6px; }
+
+/* ── MODAL / DRAWER ── */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+.overlay.open { display: flex; }
+.drawer { background: var(--surface); border-radius: 20px 20px 0 0; width: 100%; max-width: 480px; padding: 20px; max-height: 90vh; overflow-y: auto; animation: slideUp .25s ease; }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.drawer-handle { width: 36px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 20px; }
+.drawer-title { font-family: var(--font-num); font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+
+/* ── TOAST ── */
+#toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 20px; font-size: 13px; font-weight: 500; z-index: 999; transition: transform .3s ease; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.success { border-color: var(--green); color: var(--green); }
+#toast.error { border-color: var(--red); color: var(--red); }
+
+/* ── MISC ── */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-3); }
+.empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+.tag { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 4px; letter-spacing: .04em; }
+.tag-income { background: var(--green-dim); color: var(--green); }
+.tag-expense { background: var(--red-dim); color: var(--red); }
+.row { display: flex; gap: 8px; }
+.row .form-group { flex: 1; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.section-header h3 { font-size: 14px; font-weight: 600; color: var(--text-2); }
+.see-all { font-size: 12px; color: var(--violet-soft); font-weight: 500; cursor: pointer; border: none; background: none; }
+.badge { font-family: var(--font-num); font-size: 10px; font-weight: 700; background: var(--violet); color: #fff; padding: 2px 6px; border-radius: 4px; }
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  width: 38px; height: 38px; border-radius: 50%;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 18px; transition: transform .2s;
+  flex-shrink: 0;
+}
+.theme-toggle:active { transform: scale(.9) rotate(20deg); }
+
+/* ── AI HERO WIDGET (homepage) ── */
+.ai-hero-widget {
+  background: linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(124,58,237,0.06) 100%);
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 18px; padding: 16px; margin-bottom: 12px;
+  position: relative; overflow: hidden;
+}
+.ai-hero-widget::before {
+  content: '✨';
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  font-size: 36px; opacity: 0.15; pointer-events: none;
+}
+.ai-hero-title { font-size: 12px; font-weight: 600; color: var(--violet-soft); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.ai-hero-tip { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.5; margin-bottom: 12px; }
+.ai-hero-input-row { display: flex; gap: 8px; }
+.ai-hero-input-row input {
+  flex: 1; background: rgba(255,255,255,0.06); border: 1px solid rgba(124,58,237,0.3);
+  border-radius: 12px; padding: 10px 14px; color: var(--text); font-size: 14px; outline: none;
+}
+[data-theme="light"] .ai-hero-input-row input { background: rgba(124,58,237,0.06); }
+.ai-hero-input-row input::placeholder { color: var(--text-3); }
+.ai-hero-send {
+  width: 40px; height: 40px; border-radius: 12px; background: var(--violet); border: none;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+}
+.ai-hero-response {
+  font-size: 13px; color: var(--text-2); margin-top: 10px; line-height: 1.6;
+  padding: 10px 12px; background: rgba(0,0,0,0.15); border-radius: 10px; display: none;
+}
+[data-theme="light"] .ai-hero-response { background: rgba(0,0,0,0.05); }
+
+/* ── HEALTH DETAIL CARDS ── */
+.health-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.health-detail-item {
+  background: var(--surface2); border-radius: 10px; padding: 10px 12px;
+  border: 1px solid var(--border);
+}
+.health-detail-label { font-size: 10px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+.health-detail-val { font-family: var(--font-num); font-size: 15px; font-weight: 700; margin-top: 3px; }
+.health-tip-bar {
+  margin-top: 12px; padding: 10px 12px;
+  background: var(--violet-dim); border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 10px; font-size: 12px; color: var(--text-2); line-height: 1.6;
+}
+.health-tip-bar strong { color: var(--violet-soft); }
+
+/* ── SAVINGS GOALS ── */
+.goal-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  position: relative;
+  overflow: hidden;
+}
+.goal-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--violet), var(--violet-soft));
+  transform-origin: left;
+  transition: transform .6s ease;
+}
+.goal-emoji { font-size: 28px; margin-bottom: 8px; display: block; }
+.goal-title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.goal-subtitle { font-size: 11px; color: var(--text-3); margin-bottom: 12px; }
+.goal-amounts { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.goal-saved { font-family: var(--font-num); font-size: 18px; font-weight: 700; }
+.goal-target { font-family: var(--font-num); font-size: 12px; color: var(--text-3); }
+.goal-progress-bar { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+.goal-progress-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--violet), var(--violet-soft));
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+  position: relative;
+}
+.goal-progress-fill::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0;
+  width: 12px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 4px;
+  filter: blur(3px);
+}
+.goal-meta { display: flex; justify-content: space-between; }
+.goal-pct { font-family: var(--font-num); font-size: 12px; font-weight: 700; color: var(--violet-soft); }
+.goal-remaining { font-size: 11px; color: var(--text-3); }
+.goal-actions { display: flex; gap: 8px; margin-top: 12px; }
+.goal-add-btn { flex: 1; padding: 8px; border-radius: 8px; background: var(--violet-dim); border: 1px solid rgba(124,58,237,0.3); color: var(--violet-soft); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; transition: background .2s; }
+.goal-add-btn:active { background: rgba(124,58,237,0.25); }
+.goal-del-btn { padding: 8px 12px; border-radius: 8px; background: var(--red-dim); border: 1px solid rgba(239,68,68,0.2); color: var(--red); font-size: 13px; cursor: pointer; }
+
+/* Goal completed state */
+.goal-card.completed { border-color: rgba(16,185,129,0.3); }
+.goal-card.completed .goal-progress-fill { background: linear-gradient(90deg, var(--green), #34d399); }
+.goal-card.completed .goal-pct { color: var(--green); }
+
+/* ── STATS MINI CARDS ── */
+.mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.mini-stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 12px;
+}
+.mini-stat-val { font-family: var(--font-num); font-size: 20px; font-weight: 700; }
+.mini-stat-label { font-size: 10px; color: var(--text-3); margin-top: 3px; font-weight: 500; }
+.mini-stat-trend { font-size: 11px; font-weight: 600; margin-top: 2px; }
+
+/* ── GLASSMORPHISM HERO UPGRADE ── */
+.hero-card {
+  background: linear-gradient(135deg, rgba(26,15,58,0.9) 0%, rgba(18,18,26,0.85) 60%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(124,58,237,0.25);
+  border-radius: 20px; padding: 24px; margin-bottom: 12px; position: relative; overflow: hidden;
+  box-shadow: 0 4px 32px rgba(124,58,237,0.08), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.hero-card::before {
+  content: ''; position: absolute; top: -40px; right: -40px;
+  width: 200px; height: 200px; background: radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-card::after {
+  content: ''; position: absolute; bottom: -60px; left: -20px;
+  width: 150px; height: 150px; background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ═══════════════════ PAGE: ACCUEIL ═══════════════════ -->
+  <div class="page active" id="page-home">
+    <div class="page-header">
+      <div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:2px;">Bonjour 👋</div>
+        <h1 id="display-name">Mon Wallet</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="header-badge" id="profile-badge" style="background:var(--violet-dim);color:var(--violet-soft);">—</span>
+        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Changer le thème">🌙</button>
+      </div>
+    </div>
+
+    <!-- Hero Balance -->
+    <div class="hero-card">
+      <div class="hero-label" id="hero-label-text">Solde disponible</div>
+      <div class="hero-amount"><span class="currency" id="hero-currency-label">HTG</span><span id="hero-balance">0</span></div>
+      <div id="dh-convert-line" style="display:none;margin-top:6px;margin-bottom:-4px;font-size:12px;color:var(--amber);font-weight:500;letter-spacing:.02em;">
+        ≈ <span id="hero-balance-dh">0</span> <span style="font-size:10px;opacity:.8;">Dollar Haïtien</span>
+      </div>
+      <div class="hero-sub">
+        <div class="hero-stat">
+          <div class="hero-stat-label">Ce mois</div>
+          <div class="hero-stat-val pos" id="hero-income">+0</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">Dépenses</div>
+          <div class="hero-stat-val neg" id="hero-expenses">-0</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-label">Épargne</div>
+          <div class="hero-stat-val pos" id="hero-savings">0%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Health Ring -->
+    <div class="card">
+      <div class="card-title">Santé Financière</div>
+      <div class="health-wrap">
+        <div class="ring-container">
+          <svg width="90" height="90" viewBox="0 0 90 90">
+            <circle cx="45" cy="45" r="38" fill="none" stroke="var(--border)" stroke-width="7"/>
+            <circle id="health-ring" cx="45" cy="45" r="38" fill="none" stroke="var(--violet)" stroke-width="7"
+              stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76" style="transition:stroke-dashoffset .8s ease, stroke .4s;"/>
+          </svg>
+          <div class="ring-center">
+            <div class="ring-score" id="health-score">—</div>
+            <div class="ring-label">score</div>
+          </div>
+        </div>
+        <div class="health-info">
+          <div class="health-title" id="health-title">Configure ton profil</div>
+          <div class="health-desc" id="health-desc">Ajoute tes revenus et dépenses pour voir ton score de santé financière.</div>
+        </div>
+      </div>
+      <!-- Detail metrics -->
+      <div class="health-detail-grid" id="health-details" style="display:none;">
+        <div class="health-detail-item">
+          <div class="health-detail-label">Taux d'épargne</div>
+          <div class="health-detail-val" id="hd-savings-rate">—</div>
+        </div>
+        <div class="health-detail-item">
+          <div class="health-detail-label">Ratio dépenses</div>
+          <div class="health-detail-val" id="hd-expense-ratio">—</div>
+        </div>
+        <div class="health-detail-item">
+          <div class="health-detail-label">Dettes actives</div>
+          <div class="health-detail-val" id="hd-debts">—</div>
+        </div>
+        <div class="health-detail-item">
+          <div class="health-detail-label">Objectifs en cours</div>
+          <div class="health-detail-val" id="hd-goals">—</div>
+        </div>
+      </div>
+      <!-- AI First tip -->
+      <div class="health-tip-bar" id="health-ai-tip" style="display:none;">
+        <strong>💡 Conseil IA :</strong> <span id="health-ai-tip-text">Chargement...</span>
+      </div>
+    </div>
+
+    <!-- AI Hero Widget -->
+    <div class="ai-hero-widget">
+      <div class="ai-hero-title">🤖 Conseiller IA</div>
+      <div class="ai-hero-tip" id="ai-hero-tip-text">Pose-moi une question sur tes finances ou demande-moi une analyse complète.</div>
+      <div class="ai-hero-input-row">
+        <input type="text" id="ai-hero-input" placeholder="Ex: analyse mes dépenses ce mois..." onkeydown="if(event.key==='Enter')sendAIHero()">
+        <button class="ai-hero-send" onclick="sendAIHero()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="ai-hero-response" id="ai-hero-response"></div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-grid" style="grid-template-columns:repeat(4,1fr);">
+      <button class="quick-btn" onclick="openDrawer('drawer-income')">
+        <div class="quick-icon" style="background:var(--green-dim);">💰</div>
+        <span>Revenu</span>
+      </button>
+      <button class="quick-btn" onclick="openDrawer('drawer-expense')">
+        <div class="quick-icon" style="background:var(--red-dim);">💸</div>
+        <span>Dépense</span>
+      </button>
+      <button class="quick-btn" onclick="openDrawer('drawer-debt')">
+        <div class="quick-icon" style="background:rgba(239,68,68,0.18);">💳</div>
+        <span>Dette</span>
+      </button>
+      <button class="quick-btn" onclick="openDrawer('drawer-budget')">
+        <div class="quick-icon" style="background:var(--amber-dim);">📊</div>
+        <span>Budget</span>
+      </button>
+    </div>
+    <div class="quick-grid" style="grid-template-columns:repeat(4,1fr);margin-top:-4px;">
+      <button class="quick-btn" onclick="navigate('goals')">
+        <div class="quick-icon" style="background:var(--violet-dim);">🎯</div>
+        <span>Objectifs</span>
+      </button>
+      <button class="quick-btn" onclick="navigate('converter')">
+        <div class="quick-icon" style="background:rgba(16,185,129,0.12);">💱</div>
+        <span>Convertir</span>
+      </button>
+      <button class="quick-btn" onclick="navigate('ai')">
+        <div class="quick-icon" style="background:var(--violet-dim);">🤖</div>
+        <span>IA</span>
+      </button>
+      <button class="quick-btn" onclick="openDrawer('drawer-initial')">
+        <div class="quick-icon" style="background:rgba(16,185,129,0.15);">🏦</div>
+        <span>Solde</span>
+      </button>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+      <div class="section-header">
+        <h3>Transactions récentes</h3>
+        <button class="see-all" onclick="navigate('transactions')">Voir tout →</button>
+      </div>
+      <div id="recent-tx">
+        <div class="empty-state">
+          <div class="icon">📋</div>
+          <p>Aucune transaction pour l'instant</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budgets -->
+    <div class="card" id="budgets-home-section">
+      <div class="section-header">
+        <h3>Budgets du mois</h3>
+        <button class="see-all" onclick="navigate('budgets')">Gérer →</button>
+      </div>
+      <div id="budget-preview"></div>
+    </div>
+
+    <!-- Dettes & Emprunts -->
+    <div class="card" id="debts-home-section">
+      <div class="section-header">
+        <h3>Dettes & Emprunts</h3>
+        <button class="see-all" onclick="openDrawer('drawer-debt')">+ Ajouter →</button>
+      </div>
+      <div id="debts-preview"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE: TRANSACTIONS ═══════════════════ -->
+  <div class="page" id="page-transactions">
+    <div class="page-header">
+      <h1>Transactions</h1>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sm btn-ghost" onclick="openDrawer('drawer-income')">+ Revenu</button>
+        <button class="btn btn-sm btn-primary" onclick="openDrawer('drawer-expense')">+ Dépense</button>
+      </div>
+    </div>
+
+    <div class="tabs" style="margin:0 16px 12px;">
+      <button class="tab active" onclick="filterTx('all',this)">Tout</button>
+      <button class="tab" onclick="filterTx('income',this)">Revenus</button>
+      <button class="tab" onclick="filterTx('expense',this)">Dépenses</button>
+      <button class="tab" onclick="filterTx('debt',this)">Dettes</button>
+    </div>
+
+    <div style="padding:0 16px;" id="tx-filter-bar">
+      <select id="tx-month-filter" onchange="renderTransactions()" style="margin-bottom:12px;">
+        <option value="all">Tous les mois</option>
+      </select>
+    </div>
+
+    <div style="padding:0 16px;" id="all-tx-list">
+      <div class="empty-state"><div class="icon">💳</div><p>Aucune transaction</p></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE: BUDGETS ═══════════════════ -->
+  <div class="page" id="page-budgets">
+    <div class="page-header">
+      <h1>Budgets</h1>
+      <button class="btn btn-sm btn-primary" onclick="openDrawer('drawer-budget')">+ Créer</button>
+    </div>
+    <div style="padding:0 16px;" id="budgets-full-list">
+      <div class="empty-state"><div class="icon">🎯</div><p>Crée un budget pour suivre tes dépenses</p></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE: IA CONSEILLER ═══════════════════ -->
+  <div class="page" id="page-ai">
+    <div class="page-header" style="flex-direction:column;align-items:flex-start;">
+      <h1>IA Conseiller 🤖</h1>
+      <p style="font-size:12px;color:var(--text-3);margin-top:4px;">Propulsé par Groq · Llama 3</p>
+    </div>
+    <div style="padding:0 16px 16px;">
+      <!-- API Key -->
+      <div class="card card-sm" style="margin-bottom:12px;" id="api-key-section">
+        <div class="card-title">Clé API Groq</div>
+        <div class="ai-key-row">
+          <input type="password" id="groq-key" placeholder="gsk_..." value="">
+          <button class="btn btn-sm btn-primary" onclick="saveApiKey()">Sauver</button>
+        </div>
+        <p style="font-size:11px;color:var(--text-3);margin-top:8px;">Obtiens ta clé sur <strong style="color:var(--violet-soft);">console.groq.com</strong> — c'est gratuit</p>
+      </div>
+
+      <!-- Suggestions rapides -->
+      <div class="chip-group" id="ai-chips"></div>
+
+      <!-- Chat -->
+      <div class="card" style="padding:12px;">
+        <div class="ai-messages" id="ai-messages">
+          <div class="msg msg-ai">Salut ! 👋 Je suis ton conseiller financier IA. Renseigne ta clé Groq API et je peux analyser tes finances et te donner des conseils personnalisés. Tu peux aussi me poser n'importe quelle question sur la gestion d'argent.</div>
+        </div>
+        <div class="ai-input-row">
+          <textarea id="ai-input" placeholder="Pose-moi une question..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI();}"></textarea>
+          <button class="ai-send" onclick="sendAI()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE: PROFIL ═══════════════════ -->
+  <div class="page" id="page-profile">
+    <div class="profile-header">
+      <div class="avatar" id="profile-avatar">👤</div>
+      <div class="profile-name" id="profile-display-name">Ton Profil</div>
+      <div class="profile-type" id="profile-display-type">Non configuré</div>
+    </div>
+
+    <div style="padding:0 16px;">
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-box-val pos" id="stat-total-income">0</div>
+          <div class="stat-box-label">Total revenus</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val neg" id="stat-total-expense">0</div>
+          <div class="stat-box-label">Total dépenses</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-box-val" id="stat-tx-count" style="color:var(--violet-soft);">0</div>
+          <div class="stat-box-label">Transactions</div>
+        </div>
+      </div>
+
+      <!-- Edit Profile -->
+      <div class="card">
+        <div class="card-title">Mon Profil</div>
+        <div class="form-group">
+          <label>Prénom / Pseudo</label>
+          <input type="text" id="p-name" placeholder="ex: Kenny" maxlength="24">
+        </div>
+        <div class="form-group">
+          <label>Ma situation financière</label>
+          <select id="p-type">
+            <option value="">-- Choisir --</option>
+            <option value="salarie">💼 Salarié(e)</option>
+            <option value="freelance">🚀 Freelance / Auto-entrepreneur</option>
+            <option value="etudiant">🎓 Étudiant(e)</option>
+            <option value="parents">👨‍👩‍👦 Argent des parents</option>
+            <option value="sans_revenu">⏳ Sans revenu fixe</option>
+            <option value="retraite">🧘 Retraité(e)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Devise préférée</label>
+          <select id="p-currency" onchange="onCurrencyChange()">
+            <option value="HTG">🇭🇹 HTG — Gourde haïtienne</option>
+            <option value="USD">🇺🇸 USD — Dollar américain</option>
+            <option value="EUR">🇪🇺 EUR — Euro</option>
+            <option value="CAD">🇨🇦 CAD — Dollar canadien</option>
+            <option value="MXN">🇲🇽 MXN — Peso mexicain</option>
+            <option value="CLP">🇨🇱 CLP — Peso chilien</option>
+            <option value="DOP">🇩🇴 DOP — Peso dominicain</option>
+            <option value="FCFA">🌍 FCFA — Franc CFA</option>
+            <option value="XOF">🌍 XOF — Franc Ouest-Africain</option>
+            <option value="GBP">🇬🇧 GBP — Livre sterling</option>
+            <option value="BRL">🇧🇷 BRL — Real brésilien</option>
+          </select>
+        </div>
+        <!-- HTG-only: Dollar haïtien toggle -->
+        <div id="htg-toggle-group" style="display:none;margin-bottom:14px;">
+          <label style="font-size:12px;font-weight:500;color:var(--text-2);display:block;margin-bottom:8px;">Option spéciale Haïti 🇭🇹</label>
+          <div style="display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
+            <div style="position:relative;width:44px;height:26px;flex-shrink:0;" onclick="toggleDH()">
+              <span id="toggle-track" style="display:block;position:absolute;inset:0;background:var(--border);border-radius:13px;transition:.25s;cursor:pointer;"></span>
+              <span id="toggle-thumb" style="display:block;position:absolute;left:3px;top:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:.25s;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.4);"></span>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:500;">Afficher en <span style="color:var(--amber);">Dollar Haïtien (DH)</span></div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px;">1 Dollar Haïtien = 5 Gourdes · Conversion auto sur le solde</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Objectif mensuel d'épargne (%)</label>
+          <div class="input-prefix">
+            <span>%</span>
+            <input type="number" id="p-savings-goal" placeholder="20" min="0" max="100">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveProfile()">Enregistrer le profil</button>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="card" style="margin-top:12px;">
+        <div class="card-title" style="color:var(--red);">Zone dangereuse</div>
+        <button class="btn btn-danger" onclick="confirmReset()">🗑️ Tout réinitialiser</button>
+      </div>
+    </div>
+  </div>
+  <!-- ═══════════════════ PAGE: OBJECTIFS ═══════════════════ -->
+  <div class="page" id="page-goals">
+    <div class="page-header">
+      <div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:2px;">Planifie ton avenir</div>
+        <h1>Objectifs 🎯</h1>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="openDrawer('drawer-goal')">+ Nouveau</button>
+    </div>
+    <div style="padding:0 16px 16px;">
+
+      <!-- Mini stats -->
+      <div class="mini-stats" id="goals-mini-stats">
+        <div class="mini-stat-card">
+          <div class="mini-stat-val pos" id="goals-total-saved">0</div>
+          <div class="mini-stat-label">Total épargné</div>
+        </div>
+        <div class="mini-stat-card">
+          <div class="mini-stat-val" id="goals-count">0</div>
+          <div class="mini-stat-label">Objectifs actifs</div>
+        </div>
+      </div>
+
+      <!-- Goals list -->
+      <div id="goals-list"></div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PAGE: CONVERTISSEUR ═══════════════════ -->
+  <div class="page" id="page-converter">
+    <div class="page-header">
+      <h1>Convertisseur 💱</h1>
+    </div>
+    <div style="padding:0 16px 16px;">
+
+      <!-- Status bar -->
+      <div id="conv-status-bar" style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:14px;font-size:12px;color:var(--text-3);">
+        <span id="conv-status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text-3);flex-shrink:0;"></span>
+        <span id="conv-status-text">Taux non chargés</span>
+        <button onclick="fetchRates()" style="margin-left:auto;font-size:11px;padding:4px 10px;border-radius:6px;background:var(--violet-dim);border:1px solid var(--violet);color:var(--violet-soft);cursor:pointer;font-weight:600;">↻ Actualiser</button>
+      </div>
+
+      <!-- Main converter card -->
+      <div class="card" style="padding:20px;">
+        <!-- FROM -->
+        <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;">De</label>
+        <div style="display:flex;gap:8px;margin:8px 0 16px;">
+          <select id="conv-from" onchange="convert()" style="width:140px;flex-shrink:0;font-weight:600;">
+          </select>
+          <input type="number" id="conv-amount" value="1" min="0" oninput="convert()" style="flex:1;font-family:var(--font-num);font-size:20px;font-weight:700;text-align:right;">
+        </div>
+
+        <!-- Swap button -->
+        <div style="text-align:center;margin:-4px 0 12px;">
+          <button onclick="swapCurrencies()" style="width:40px;height:40px;border-radius:50%;background:var(--violet);border:none;cursor:pointer;font-size:18px;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(124,58,237,.4);">⇅</button>
+        </div>
+
+        <!-- TO -->
+        <label style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;">Vers</label>
+        <div style="display:flex;gap:8px;margin:8px 0 0;">
+          <select id="conv-to" onchange="convert()" style="width:140px;flex-shrink:0;font-weight:600;">
+          </select>
+          <div style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;text-align:right;">
+            <div id="conv-result" style="font-family:var(--font-num);font-size:22px;font-weight:700;color:var(--violet-soft);">—</div>
+            <div id="conv-result-cur" style="font-size:11px;color:var(--text-3);margin-top:2px;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rate info -->
+      <div id="conv-rate-info" style="text-align:center;padding:8px 0;font-size:12px;color:var(--text-3);margin-bottom:4px;"></div>
+
+      <!-- HTG special: Dollar Haïtien -->
+      <div id="conv-dh-box" style="display:none;" class="card" style="padding:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--amber);">🇭🇹 Dollar Haïtien (DH)</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">1 DH = 5 HTG (taux fixe historique)</div>
+          </div>
+          <div style="text-align:right;">
+            <div id="conv-dh-result" style="font-family:var(--font-num);font-size:18px;font-weight:700;color:var(--amber);">—</div>
+            <div style="font-size:10px;color:var(--text-3);">DH</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Multi conversion table -->
+      <div class="card" style="margin-top:12px;">
+        <div class="card-title">Conversion rapide · <span id="conv-table-base">1</span> <span id="conv-table-cur">HTG</span></div>
+        <div id="conv-table"></div>
+      </div>
+
+      <!-- Popular pairs -->
+      <div style="margin-top:12px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-3);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">Paires populaires</div>
+        <div id="conv-pairs" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ═══════════════════ BOTTOM NAV ═══════════════════ -->
+<nav id="bottom-nav">
+  <button class="nav-item active" onclick="navigate('home')" id="nav-home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    <span>Accueil</span>
+  </button>
+  <button class="nav-item" onclick="navigate('transactions')" id="nav-transactions">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <span>Transactions</span>
+  </button>
+  <button class="nav-item" onclick="navigate('budgets')" id="nav-budgets">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span>Budgets</span>
+  </button>
+  <button class="nav-item" onclick="navigate('goals')" id="nav-goals">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+    <span>Objectifs</span>
+  </button>
+  <button class="nav-item" onclick="navigate('converter')" id="nav-converter">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+    <span>Convertir</span>
+  </button>
+  <button class="nav-item" onclick="navigate('profile')" id="nav-profile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span>Profil</span>
+  </button>
+</nav>
+
+<!-- ═══════════════════ DRAWERS ═══════════════════ -->
+
+<!-- Add Income -->
+<div class="overlay" id="overlay-income" onclick="closeOnOverlay(event,'overlay-income')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">💰 Ajouter un revenu</div>
+    <div class="form-group">
+      <label>Montant</label>
+      <div class="input-prefix"><span id="in-currency-prefix">FCFA</span><input type="number" id="in-amount" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-group">
+      <label>Source</label>
+      <select id="in-source">
+        <option value="Salaire">💼 Salaire</option>
+        <option value="Freelance">🚀 Freelance / Client</option>
+        <option value="Parents">👨‍👩‍👦 Parents / famille</option>
+        <option value="Bourse">🎓 Bourse / aide</option>
+        <option value="Vente">🛒 Vente</option>
+        <option value="Remboursement">↩️ Remboursement reçu</option>
+        <option value="Emprunt reçu">🤝 Emprunt reçu</option>
+        <option value="Carte en ligne">💳 Solde carte en ligne</option>
+        <option value="Autre">📌 Autre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>📝 Pourquoi / Note (important pour l'IA)</label>
+      <input type="text" id="in-note" placeholder="ex: Paie janvier, client X, cadeau anniversaire...">
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="in-date">
+    </div>
+    <button class="btn btn-primary" onclick="addTransaction('income')">Enregistrer le revenu</button>
+  </div>
+</div>
+<!-- Add Expense -->
+<div class="overlay" id="overlay-expense" onclick="closeOnOverlay(event,'overlay-expense')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">💸 Ajouter une dépense</div>
+    <div class="form-group">
+      <label>Montant</label>
+      <div class="input-prefix"><span id="ex-currency-prefix">FCFA</span><input type="number" id="ex-amount" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select id="ex-cat">
+        <option value="Alimentation">🍔 Alimentation</option>
+        <option value="Transport">🚌 Transport / carburant</option>
+        <option value="Logement">🏠 Logement / loyer</option>
+        <option value="Santé">💊 Santé / pharmacie</option>
+        <option value="Internet">🌐 Internet / WiFi</option>
+        <option value="Téléphone">📞 Téléphone / crédit</option>
+        <option value="Électricité">⚡ Électricité / eau</option>
+        <option value="Shopping">🛍️ Shopping / vêtements</option>
+        <option value="Loisirs">🎮 Loisirs / sorties</option>
+        <option value="Streaming">🎬 Streaming / abonnements</option>
+        <option value="Carte en ligne">💳 Carte / solde en ligne</option>
+        <option value="Éducation">📚 Éducation / fournitures</option>
+        <option value="Épargne">💎 Épargne / investissement</option>
+        <option value="Remboursement dette">🔴 Remboursement dette</option>
+        <option value="Autre">📌 Autre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>📝 Pourquoi cette dépense ? (l'IA s'en souviendra)</label>
+      <input type="text" id="ex-note" placeholder="ex: Pizza sortie vendredi, médicament maman, recharge Digicel...">
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="ex-date">
+    </div>
+    <button class="btn btn-primary" onclick="addTransaction('expense')">Enregistrer la dépense</button>
+  </div>
+</div>
+
+<!-- Add Budget -->
+<div class="overlay" id="overlay-budget" onclick="closeOnOverlay(event,'overlay-budget')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">🎯 Créer un budget</div>
+    <div class="form-group">
+      <label>Catégorie</label>
+      <select id="bud-cat">
+        <option value="Alimentation">🍔 Alimentation</option>
+        <option value="Transport">🚌 Transport</option>
+        <option value="Logement">🏠 Logement</option>
+        <option value="Santé">💊 Santé</option>
+        <option value="Internet">🌐 Internet / WiFi</option>
+        <option value="Téléphone">📞 Téléphone</option>
+        <option value="Électricité">⚡ Électricité / eau</option>
+        <option value="Shopping">🛍️ Shopping</option>
+        <option value="Loisirs">🎮 Loisirs</option>
+        <option value="Streaming">🎬 Streaming</option>
+        <option value="Carte en ligne">💳 Carte en ligne</option>
+        <option value="Éducation">📚 Éducation</option>
+        <option value="Autre">📌 Autre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Limite mensuelle</label>
+      <div class="input-prefix"><span id="bud-currency-prefix">FCFA</span><input type="number" id="bud-limit" placeholder="0" min="0"></div>
+    </div>
+    <button class="btn btn-primary" onclick="addBudget()">Créer le budget</button>
+  </div>
+</div>
+
+<!-- Initial Balance Drawer -->
+<div class="overlay" id="overlay-initial" onclick="closeOnOverlay(event,'overlay-initial')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">🏦 Solde de départ</div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6;">Définis le montant que tu avais déjà avant de commencer à tracker. Ce solde sera ajouté à ton solde total comme base de départ.</p>
+    <div class="form-group">
+      <label>Montant de départ</label>
+      <div class="input-prefix"><span id="init-currency-prefix">HTG</span><input type="number" id="init-amount" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-group">
+      <label>Note (optionnel)</label>
+      <input type="text" id="init-note" placeholder="ex: Cash en main, compte banque...">
+    </div>
+    <button class="btn btn-primary" onclick="saveInitialBalance()">Enregistrer le solde de départ</button>
+    <div id="current-init-display" style="margin-top:12px;text-align:center;font-size:13px;color:var(--text-3);"></div>
+  </div>
+</div>
+
+<!-- Debt / Emprunt Drawer -->
+<div class="overlay" id="overlay-debt" onclick="closeOnOverlay(event,'overlay-debt')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">💳 Ajouter une dette / emprunt</div>
+    <div class="form-group">
+      <label>Type</label>
+      <select id="debt-type">
+        <option value="owed_by_me">🔴 Je dois de l'argent (dette)</option>
+        <option value="owed_to_me">🟢 On me doit de l'argent (créance)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Montant</label>
+      <div class="input-prefix"><span id="debt-currency-prefix">HTG</span><input type="number" id="debt-amount" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-group">
+      <label>Avec qui ?</label>
+      <input type="text" id="debt-person" placeholder="ex: Jean, Banque, Digicel...">
+    </div>
+    <div class="form-group">
+      <label>Raison</label>
+      <input type="text" id="debt-reason" placeholder="ex: Loyer, prêt téléphone...">
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="debt-date">
+      </div>
+      <div class="form-group">
+        <label>Échéance (optionnel)</label>
+        <input type="date" id="debt-due">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addDebt()">Enregistrer</button>
+  </div>
+</div>
+
+<!-- Add Goal -->
+<div class="overlay" id="overlay-goal" onclick="closeOnOverlay(event,'overlay-goal')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">🎯 Nouvel objectif d'épargne</div>
+    <div class="form-group">
+      <label>Emoji / icône</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px;" id="goal-emoji-picker">
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('🏠')">🏠</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('✈️')">✈️</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('📱')">📱</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('🚗')">🚗</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('💻')">💻</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('🎓')">🎓</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('💍')">💍</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('🏖️')">🏖️</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('💰')">💰</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('🎮')">🎮</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('🎁')">🎁</span>
+        <span style="font-size:22px;cursor:pointer;padding:4px;" onclick="selectGoalEmoji('⭐')">⭐</span>
+      </div>
+      <input type="text" id="goal-emoji" placeholder="Emoji sélectionné..." style="width:80px;text-align:center;font-size:20px;" maxlength="4">
+    </div>
+    <div class="form-group">
+      <label>Nom de l'objectif</label>
+      <input type="text" id="goal-name" placeholder="ex: Nouveau téléphone, Voyage...">
+    </div>
+    <div class="form-group">
+      <label>Montant cible</label>
+      <div class="input-prefix"><span id="goal-currency-prefix">HTG</span><input type="number" id="goal-target" placeholder="0" min="1"></div>
+    </div>
+    <div class="form-group">
+      <label>Épargne déjà accumulée (optionnel)</label>
+      <div class="input-prefix"><span id="goal-saved-prefix">HTG</span><input type="number" id="goal-initial-saved" placeholder="0" min="0"></div>
+    </div>
+    <div class="form-group">
+      <label>Date limite (optionnel)</label>
+      <input type="date" id="goal-deadline">
+    </div>
+    <button class="btn btn-primary" onclick="addGoal()">Créer l'objectif</button>
+  </div>
+</div>
+
+<!-- Deposit to Goal -->
+<div class="overlay" id="overlay-goal-deposit" onclick="closeOnOverlay(event,'overlay-goal-deposit')">
+  <div class="drawer">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">💸 Ajouter de l'épargne</div>
+    <input type="hidden" id="deposit-goal-id">
+    <p id="deposit-goal-name" style="font-size:14px;color:var(--text-2);margin-bottom:16px;"></p>
+    <div class="form-group">
+      <label>Montant à ajouter</label>
+      <div class="input-prefix"><span id="deposit-currency-prefix">HTG</span><input type="number" id="deposit-amount" placeholder="0" min="1"></div>
+    </div>
+    <button class="btn btn-primary" onclick="depositToGoal()">Ajouter</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  DATA LAYER — localStorage persistence
+// ═══════════════════════════════════════════════════════════════
+const DB = {
+  get: (k, def) => { try { const v = localStorage.getItem('wallet_' + k); return v ? JSON.parse(v) : def; } catch { return def; } },
+  set: (k, v) => { try { localStorage.setItem('wallet_' + k, JSON.stringify(v)); } catch {} },
+};
+
+let data = {
+  profile: DB.get('profile', { name: '', type: '', currency: 'HTG', savingsGoal: 20, showDH: false }),
+  transactions: DB.get('transactions', []),
+  budgets: DB.get('budgets', []),
+  debts: DB.get('debts', []),
+  goals: DB.get('goals', []),
+  initialBalance: DB.get('initialBalance', 0),
+  groqKey: DB.get('groqKey', ''),
+};
+
+const save = () => {
+  DB.set('profile', data.profile);
+  DB.set('transactions', data.transactions);
+  DB.set('budgets', data.budgets);
+  DB.set('debts', data.debts);
+  DB.set('goals', data.goals);
+  DB.set('initialBalance', data.initialBalance);
+  DB.set('groqKey', data.groqKey);
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════════════
+const pages = ['home', 'transactions', 'budgets', 'goals', 'ai', 'profile'];
+let currentPage = 'home';
+let txFilter = 'all';
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const navEl = document.getElementById('nav-' + page);
+  if (navEl) navEl.classList.add('active');
+  currentPage = page;
+  document.getElementById('app').scrollTo(0, 0);
+  if (page === 'home') renderHome();
+  if (page === 'transactions') renderTransactions();
+  if (page === 'budgets') renderBudgets();
+  if (page === 'profile') renderProfile();
+  if (page === 'ai') renderAIPage();
+  if (page === 'goals') renderGoals();
+  if (page === 'converter') renderConverterPage();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DRAWERS
+// ═══════════════════════════════════════════════════════════════
+function openDrawer(id) {
+  if (id === 'drawer-initial') { openInitialDrawer(); return; }
+  const overlayId = id.replace('drawer-', 'overlay-');
+  document.getElementById(overlayId).classList.add('open');
+  const today = new Date().toISOString().split('T')[0];
+  const dateInputs = document.querySelectorAll('#' + overlayId + ' input[type="date"]');
+  dateInputs.forEach(i => { if (!i.value) i.value = today; });
+  // update currency prefixes
+  const cur = data.profile.currency || 'HTG';
+  document.querySelectorAll('[id$="-currency-prefix"]').forEach(el => el.textContent = cur);
+}
+
+function closeDrawer(id) {
+  document.getElementById(id.replace('drawer-', 'overlay-')).classList.remove('open');
+}
+
+function closeOnOverlay(e, id) {
+  if (e.target.classList.contains('overlay')) document.getElementById(id).classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TRANSACTIONS
+// ═══════════════════════════════════════════════════════════════
+function addTransaction(type) {
+  const isIncome = type === 'income';
+  const amountEl = document.getElementById(isIncome ? 'in-amount' : 'ex-amount');
+  const amount = parseFloat(amountEl.value);
+  if (!amount || amount <= 0) { showToast('Montant invalide', 'error'); return; }
+
+  const tx = {
+    id: Date.now(),
+    type,
+    amount,
+    date: document.getElementById(isIncome ? 'in-date' : 'ex-date').value || new Date().toISOString().split('T')[0],
+    category: isIncome
+      ? document.getElementById('in-source').value
+      : document.getElementById('ex-cat').value,
+    note: document.getElementById(isIncome ? 'in-note' : 'ex-note').value,
+    currency: data.profile.currency || 'HTG',
+  };
+
+  data.transactions.unshift(tx);
+  save();
+
+  amountEl.value = '';
+  document.getElementById(isIncome ? 'in-note' : 'ex-note').value = '';
+  closeDrawer(isIncome ? 'drawer-income' : 'drawer-expense');
+  showToast(isIncome ? '✅ Revenu ajouté !' : '✅ Dépense enregistrée !', 'success');
+  if (currentPage === 'home') renderHome();
+  if (currentPage === 'transactions') renderTransactions();
+}
+
+function deleteTransaction(id) {
+  if (!confirm('Supprimer cette transaction ?')) return;
+  data.transactions = data.transactions.filter(t => t.id !== id);
+  save();
+  if (currentPage === 'home') renderHome();
+  if (currentPage === 'transactions') renderTransactions();
+  showToast('Transaction supprimée', 'success');
+}
+
+const CAT_ICONS = {
+  Alimentation: '🍔', Transport: '🚌', Logement: '🏠', Santé: '💊',
+  Internet: '🌐', Téléphone: '📞', Électricité: '⚡', Shopping: '🛍️',
+  Loisirs: '🎮', Streaming: '🎬', 'Carte en ligne': '💳', Éducation: '📚',
+  Épargne: '💎', 'Remboursement dette': '🔴', Salaire: '💼', Freelance: '🚀',
+  Parents: '👨‍👩‍👦', Bourse: '🎓', Vente: '🛒', Remboursement: '↩️',
+  'Emprunt reçu': '🤝', Abonnements: '📱', Autre: '📌', Dette: '💀', Emprunt: '🤝',
+};
+
+function txHTML(tx, showDelete = true) {
+  const cur = tx.currency || 'FCFA';
+  const sign = tx.type === 'income' ? '+' : '-';
+  const col = tx.type === 'income' ? 'var(--green)' : 'var(--red)';
+  const date = new Date(tx.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+  const icon = CAT_ICONS[tx.category] || '📌';
+  const iconBg = tx.type === 'income' ? 'var(--green-dim)' : 'var(--red-dim)';
+  return `<div class="tx-item">
+    <div class="tx-icon" style="background:${iconBg};">${icon}</div>
+    <div class="tx-info">
+      <div class="tx-name">${tx.category}${tx.note ? ' · ' + tx.note : ''}</div>
+      <div class="tx-date">${date}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+      <div class="tx-amount" style="color:${col};">${sign}${fmtNum(tx.amount)} <span style="font-size:10px;font-weight:400;">${cur}</span></div>
+      ${showDelete ? `<button onclick="deleteTransaction(${tx.id})" style="font-size:10px;color:var(--text-3);background:none;border:none;cursor:pointer;">supprimer</button>` : ''}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BUDGETS
+// ═══════════════════════════════════════════════════════════════
+function addBudget() {
+  const cat = document.getElementById('bud-cat').value;
+  const limit = parseFloat(document.getElementById('bud-limit').value);
+  if (!limit || limit <= 0) { showToast('Limite invalide', 'error'); return; }
+  if (data.budgets.find(b => b.category === cat)) {
+    data.budgets = data.budgets.map(b => b.category === cat ? { ...b, limit } : b);
+    showToast('Budget mis à jour !', 'success');
+  } else {
+    data.budgets.push({ id: Date.now(), category: cat, limit });
+    showToast('Budget créé !', 'success');
+  }
+  save();
+  document.getElementById('bud-limit').value = '';
+  closeDrawer('drawer-budget');
+  if (currentPage === 'budgets') renderBudgets();
+  if (currentPage === 'home') renderHome();
+}
+
+function deleteBudget(id) {
+  data.budgets = data.budgets.filter(b => b.id !== id);
+  save();
+  renderBudgets();
+  showToast('Budget supprimé', 'success');
+}
+
+function getBudgetSpent(cat) {
+  const now = new Date();
+  const m = now.getMonth(), y = now.getFullYear();
+  return data.transactions
+    .filter(t => t.type === 'expense' && t.category === cat && (() => { const d = new Date(t.date); return d.getMonth() === m && d.getFullYear() === y; })())
+    .reduce((s, t) => s + t.amount, 0);
+}
+
+function budgetBarHTML(b) {
+  const spent = getBudgetSpent(b.category);
+  const pct = Math.min(100, Math.round((spent / b.limit) * 100));
+  const over = spent > b.limit;
+  const barCol = over ? 'var(--red)' : pct > 75 ? 'var(--amber)' : 'var(--green)';
+  const cur = data.profile.currency || 'FCFA';
+  const icon = CAT_ICONS[b.category] || '📌';
+  return `<div class="budget-item">
+    <div class="budget-header">
+      <div class="budget-name">${icon} ${b.category}</div>
+      <div class="budget-amounts" style="color:${over ? 'var(--red)' : 'var(--text-3)'};">
+        ${fmtNum(spent)} / ${fmtNum(b.limit)} ${cur}
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${barCol};"></div></div>
+    <div style="font-size:11px;color:${barCol};margin-top:4px;">${over ? '⚠️ Budget dépassé' : pct + '% utilisé'}</div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+function getMonthStats(monthOffset = 0) {
+  const now = new Date();
+  const m = now.getMonth() + monthOffset, y = now.getFullYear();
+  const txs = data.transactions.filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === ((m % 12) + 12) % 12 && d.getFullYear() === y + Math.floor(m / 12);
+  });
+  const income = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expenses = txs.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  return { income, expenses, balance: income - expenses, txs };
+}
+
+function calcHealth() {
+  const { income, expenses } = getMonthStats();
+  if (income === 0 && expenses === 0) return { score: null, title: 'Pas encore de données', desc: 'Commence à enregistrer tes revenus et dépenses.', color: 'var(--text-3)' };
+  const ratio = income > 0 ? expenses / income : 1;
+  const savPct = income > 0 ? ((income - expenses) / income) * 100 : 0;
+  let score, title, desc, color;
+  if (ratio <= 0.5) { score = 95; title = '🔥 Excellent !'; desc = `Tu économises ${Math.round(savPct)}% de tes revenus. Tu gères super bien ton argent !`; color = 'var(--green)'; }
+  else if (ratio <= 0.7) { score = 78; title = '👍 Très bien'; desc = `Bonne maîtrise avec ${Math.round(savPct)}% d'épargne. Continue comme ça !`; color = 'var(--green)'; }
+  else if (ratio <= 0.85) { score = 60; title = '⚠️ Attention'; desc = `Tes dépenses représentent ${Math.round(ratio * 100)}% de tes revenus. Essaie de réduire.`; color = 'var(--amber)'; }
+  else if (ratio <= 1) { score = 35; title = '😬 Limite'; desc = `Il te reste très peu. Identifie les dépenses à couper en priorité.`; color = 'var(--red)'; }
+  else { score = 10; title = '🚨 Déficit !'; desc = `Tu dépenses plus que tu gagnes (${Math.round((ratio - 1) * 100)}% de plus). C'est urgent à corriger.`; color = 'var(--red)'; }
+  return { score, title, desc, color };
+}
+
+function renderHome() {
+  const { income, expenses, balance } = getMonthStats();
+  const cur = data.profile.currency || 'FCFA';
+  const allIncome = data.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const allExp = data.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+
+  const net = (data.initialBalance || 0) + allIncome - allExp;
+  document.getElementById('hero-balance').textContent = fmtNum(net);
+  document.getElementById('hero-currency-label').textContent = cur;
+  // DH display
+  const dhLine = document.getElementById('dh-convert-line');
+  if (cur === 'HTG' && data.profile.showDH) {
+    dhLine.style.display = 'block';
+    document.getElementById('hero-balance-dh').textContent = fmtNum(net / 5);
+  } else {
+    dhLine.style.display = 'none';
+  }
+  // Debts preview
+  renderDebtsPreview();
+  document.getElementById('hero-income').textContent = '+' + fmtNum(income);
+  document.getElementById('hero-expenses').textContent = '-' + fmtNum(expenses);
+  const savPct = income > 0 ? Math.round(((income - expenses) / income) * 100) : 0;
+  document.getElementById('hero-savings').textContent = Math.max(0, savPct) + '%';
+  document.getElementById('display-name').textContent = data.profile.name || 'Mon Wallet';
+  const initLabel = document.getElementById('hero-label-text');
+  if (data.initialBalance > 0) {
+    initLabel.innerHTML = `Solde disponible <span style="font-size:10px;color:var(--violet-soft);margin-left:4px;">+ ${fmtNum(data.initialBalance)} départ</span>`;
+  } else {
+    initLabel.textContent = 'Solde disponible';
+  }
+
+  const typeLabels = { salarie: '💼 Salarié', freelance: '🚀 Freelance', etudiant: '🎓 Étudiant', parents: '👨‍👩‍👦 Famille', sans_revenu: '⏳ Sans revenu', retraite: '🧘 Retraité' };
+  const badge = document.getElementById('profile-badge');
+  badge.textContent = typeLabels[data.profile.type] || '⚙️ Config';
+
+  // Health ring
+  const h = calcHealth();
+  const ring = document.getElementById('health-ring');
+  const circumference = 238.76;
+  if (h.score !== null) {
+    const offset = circumference - (h.score / 100) * circumference;
+    ring.style.strokeDashoffset = offset;
+    ring.style.stroke = h.color;
+    document.getElementById('health-score').textContent = h.score;
+    document.getElementById('health-score').style.color = h.color;
+  } else {
+    ring.style.strokeDashoffset = circumference;
+    document.getElementById('health-score').textContent = '—';
+  }
+  document.getElementById('health-title').textContent = h.title;
+  document.getElementById('health-desc').textContent = h.desc;
+
+  // Health detail cards
+  const detailGrid = document.getElementById('health-details');
+  if (h.score !== null) {
+    detailGrid.style.display = 'grid';
+    const savPctH = income > 0 ? Math.round(((income - expenses) / income) * 100) : 0;
+    const expRatio = income > 0 ? Math.round((expenses / income) * 100) : 0;
+    const activeDebtsCount = data.debts.filter(d => !d.paid).length;
+    const activeGoalsCount = data.goals.filter(g => g.saved < g.target).length;
+    document.getElementById('hd-savings-rate').textContent = Math.max(0, savPctH) + '%';
+    document.getElementById('hd-savings-rate').style.color = savPctH >= 20 ? 'var(--green)' : savPctH > 0 ? 'var(--amber)' : 'var(--red)';
+    document.getElementById('hd-expense-ratio').textContent = expRatio + '%';
+    document.getElementById('hd-expense-ratio').style.color = expRatio < 70 ? 'var(--green)' : expRatio < 90 ? 'var(--amber)' : 'var(--red)';
+    document.getElementById('hd-debts').textContent = activeDebtsCount + (activeDebtsCount === 1 ? ' active' : ' actives');
+    document.getElementById('hd-debts').style.color = activeDebtsCount === 0 ? 'var(--green)' : activeDebtsCount <= 2 ? 'var(--amber)' : 'var(--red)';
+    document.getElementById('hd-goals').textContent = activeGoalsCount + (activeGoalsCount === 1 ? ' en cours' : ' en cours');
+    document.getElementById('hd-goals').style.color = activeGoalsCount > 0 ? 'var(--violet-soft)' : 'var(--text-3)';
+    // Static tip based on score
+    const tipEl = document.getElementById('health-ai-tip');
+    const tipTextEl = document.getElementById('health-ai-tip-text');
+    tipEl.style.display = 'block';
+    const tips = [
+      [90, `Tu épargnes ${Math.max(0, savPctH)}% de tes revenus — excellent ! Pense à placer ton épargne dans un objectif concret.`],
+      [70, `Bon score ! Pour passer au niveau supérieur, essaie de réduire une catégorie de dépense de 10%.`],
+      [50, `Attention — ${expRatio}% de tes revenus partent en dépenses. Identifie la catégorie la plus haute et fixe-lui un budget.`],
+      [30, `Situation tendue. Priorité : réduire les dépenses non-essentielles et éviter de nouvelles dettes.`],
+      [0, `Déficit critique. Tes dépenses dépassent tes revenus. Parle à l'IA pour un plan d'action immédiat.`],
+    ];
+    const tip = tips.find(([min]) => h.score >= min);
+    tipTextEl.textContent = tip ? tip[1] : 'Configure ton profil pour obtenir des conseils personnalisés.';
+  } else {
+    detailGrid.style.display = 'none';
+    document.getElementById('health-ai-tip').style.display = 'none';
+  }
+
+  // Recent transactions (last 5)
+  const recentEl = document.getElementById('recent-tx');
+  const recent = data.transactions.slice(0, 5);
+  recentEl.innerHTML = recent.length ? recent.map(t => txHTML(t, false)).join('') : '<div class="empty-state"><div class="icon">📋</div><p>Aucune transaction pour l\'instant</p></div>';
+
+  // Budgets preview
+  const budPreview = document.getElementById('budget-preview');
+  budPreview.innerHTML = data.budgets.length ? data.budgets.slice(0, 3).map(budgetBarHTML).join('') : '<div style="color:var(--text-3);font-size:13px;text-align:center;padding:12px 0;">Aucun budget configuré</div>';
+}
+
+function renderTransactions() {
+  // Populate month filter
+  const months = [...new Set(data.transactions.map(t => t.date.slice(0, 7)))].sort().reverse();
+  const sel = document.getElementById('tx-month-filter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="all">Tous les mois</option>' + months.map(m => {
+    const [y, mo] = m.split('-');
+    const label = new Date(y, mo - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    return `<option value="${m}">${label}</option>`;
+  }).join('');
+  if (months.includes(cur)) sel.value = cur;
+
+  const monthVal = document.getElementById('tx-month-filter').value;
+  // Debt tab shows debts list
+  if (txFilter === 'debt') {
+    const el = document.getElementById('all-tx-list');
+    const debts = data.debts;
+    el.innerHTML = debts.length ? debts.map(debtHTML).join('') : '<div class="empty-state"><div class="icon">💳</div><p>Aucune dette enregistrée</p></div>';
+    return;
+  }
+  let txs = [...data.transactions];
+  if (txFilter !== 'all') txs = txs.filter(t => t.type === txFilter);
+  if (monthVal !== 'all') txs = txs.filter(t => t.date.startsWith(monthVal));
+
+  const el = document.getElementById('all-tx-list');
+  el.innerHTML = txs.length ? txs.map(t => txHTML(t)).join('') : '<div class="empty-state"><div class="icon">💳</div><p>Aucune transaction</p></div>';
+}
+
+function filterTx(type, btn) {
+  txFilter = type;
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderTransactions();
+}
+
+function renderBudgets() {
+  const el = document.getElementById('budgets-full-list');
+  if (!data.budgets.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🎯</div><p>Aucun budget. Crée-en un pour suivre tes dépenses !</p></div>';
+    return;
+  }
+  el.innerHTML = data.budgets.map(b => `
+    <div class="card">
+      ${budgetBarHTML(b)}
+      <button class="btn btn-danger" style="margin-top:8px;padding:8px;" onclick="deleteBudget(${b.id})">Supprimer ce budget</button>
+    </div>
+  `).join('');
+}
+
+function renderProfile() {
+  const p = data.profile;
+  document.getElementById('p-name').value = p.name || '';
+  document.getElementById('p-type').value = p.type || '';
+  document.getElementById('p-currency').value = p.currency || 'HTG';
+  onCurrencyChange(true);
+  if (p.showDH) { activateDHToggle(true); }
+  document.getElementById('p-savings-goal').value = p.savingsGoal || 20;
+  document.getElementById('profile-display-name').textContent = p.name || 'Ton Profil';
+  const typeLabels = { salarie: '💼 Salarié(e)', freelance: '🚀 Freelance', etudiant: '🎓 Étudiant(e)', parents: '👨‍👩‍👦 Argent des parents', sans_revenu: '⏳ Sans revenu fixe', retraite: '🧘 Retraité(e)' };
+  document.getElementById('profile-display-type').textContent = typeLabels[p.type] || 'Non configuré';
+
+  const totalIncome = data.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const totalExp = data.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  document.getElementById('stat-total-income').textContent = fmtNum(totalIncome);
+  document.getElementById('stat-total-expense').textContent = fmtNum(totalExp);
+  document.getElementById('stat-tx-count').textContent = data.transactions.length;
+
+  // Avatar emoji by type
+  const avatars = { salarie: '💼', freelance: '🚀', etudiant: '🎓', parents: '👨‍👩‍👦', sans_revenu: '⏳', retraite: '🧘' };
+  document.getElementById('profile-avatar').textContent = avatars[p.type] || '👤';
+}
+
+function onCurrencyChange(silent) {
+  const val = document.getElementById('p-currency').value;
+  const group = document.getElementById('htg-toggle-group');
+  if (val === 'HTG') {
+    group.style.display = 'block';
+  } else {
+    group.style.display = 'none';
+    data.profile.showDH = false;
+    activateDHToggle(false);
+  }
+}
+
+function activateDHToggle(on) {
+  const track = document.getElementById('toggle-track');
+  const thumb = document.getElementById('toggle-thumb');
+  if (!track || !thumb) return;
+  if (on) {
+    track.style.background = 'var(--amber)';
+    thumb.style.left = '21px';
+  } else {
+    track.style.background = 'var(--border)';
+    thumb.style.left = '3px';
+  }
+}
+
+function toggleDH() {
+  data.profile.showDH = !data.profile.showDH;
+  activateDHToggle(data.profile.showDH);
+  save();
+  renderHome();
+}
+
+function saveProfile() {
+  data.profile = {
+    name: document.getElementById('p-name').value.trim(),
+    type: document.getElementById('p-type').value,
+    currency: document.getElementById('p-currency').value,
+    savingsGoal: parseInt(document.getElementById('p-savings-goal').value) || 20,
+    showDH: data.profile.showDH || false,
+  };
+  save();
+  showToast('✅ Profil sauvegardé !', 'success');
+  renderProfile();
+  renderHome();
+}
+
+function confirmReset() {
+  if (confirm('⚠️ Tout effacer ? Cette action est irréversible.')) {
+    localStorage.clear();
+    data = { profile: { name: '', type: '', currency: 'HTG', savingsGoal: 20, showDH: false }, transactions: [], budgets: [], debts: [], goals: [], initialBalance: 0, groqKey: '' };
+    showToast('Données réinitialisées', 'error');
+    renderHome();
+    renderProfile();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  AI ADVISOR (Groq)
+// ═══════════════════════════════════════════════════════════════
+const QUICK_PROMPTS = [
+  '📊 Analyse mes finances du mois',
+  '💡 Comment économiser plus ?',
+  '🎯 Objectifs financiers pour moi',
+  '⚠️ Où je dépense trop ?',
+  '📈 Plan pour épargner 20%',
+];
+
+let aiHistory = [];
+
+function renderAIPage() {
+  const key = data.groqKey;
+  document.getElementById('groq-key').value = key ? '••••••••••••••••' : '';
+  const chipsEl = document.getElementById('ai-chips');
+  chipsEl.innerHTML = QUICK_PROMPTS.map(p => `<div class="chip" onclick="quickPrompt('${p}')">${p}</div>`).join('');
+}
+
+function saveApiKey() {
+  const val = document.getElementById('groq-key').value.trim();
+  if (!val || val.startsWith('•')) { showToast('Colle ta vraie clé API', 'error'); return; }
+  data.groqKey = val;
+  save();
+  document.getElementById('groq-key').value = '••••••••••••••••';
+  showToast('✅ Clé API sauvegardée !', 'success');
+  appendAIMsg('assistant', '✅ Clé API enregistrée ! Je suis prêt à analyser tes finances. Pose-moi une question ou clique sur une suggestion !');
+}
+
+function quickPrompt(text) {
+  document.getElementById('ai-input').value = text;
+  sendAI();
+}
+
+function appendAIMsg(role, text) {
+  const el = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + (role === 'assistant' ? 'msg-ai' : 'msg-user');
+  div.innerHTML = text.replace(/\n/g, '<br>');
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  return div;
+}
+
+function buildFinanceContext() {
+  const { income, expenses } = getMonthStats();
+  const allIncome = data.transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const allExp = data.transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const h = calcHealth();
+  const cur = data.profile.currency || 'HTG';
+  const typeLabels = { salarie: 'Salarié', freelance: 'Freelance', etudiant: 'Étudiant', parents: "Reçoit de l'argent des parents", sans_revenu: 'Sans revenu fixe', retraite: 'Retraité' };
+
+  // Category breakdown with notes
+  const catBreakdown = {};
+  data.transactions.filter(t => t.type === 'expense').forEach(t => {
+    if (!catBreakdown[t.category]) catBreakdown[t.category] = { total: 0, notes: [] };
+    catBreakdown[t.category].total += t.amount;
+    if (t.note) catBreakdown[t.category].notes.push(t.note);
+  });
+  const top5 = Object.entries(catBreakdown).sort((a, b) => b[1].total - a[1].total).slice(0, 5);
+
+  // Recent transactions with notes
+  const recentTx = data.transactions.slice(0, 10).map(t =>
+    `${t.type === 'income' ? '+' : '-'}${fmtNum(t.amount)} ${cur} | ${t.category}${t.note ? ' (note: ' + t.note + ')' : ''} | ${t.date}`
+  ).join('\n');
+
+  // Debts
+  const activeDebts = data.debts.filter(d => !d.paid);
+  const totalOwed = activeDebts.filter(d => d.type === 'owed_by_me').reduce((s, d) => s + d.amount, 0);
+  const totalCredit = activeDebts.filter(d => d.type === 'owed_to_me').reduce((s, d) => s + d.amount, 0);
+  const debtsDetail = activeDebts.map(d =>
+    `${d.type === 'owed_by_me' ? 'JE DOIS' : 'ON ME DOIT'} ${fmtNum(d.amount)} ${cur} à/de ${d.person}${d.reason ? ' (raison: ' + d.reason + ')' : ''}${d.due ? ' | échéance: ' + d.due : ''}`
+  ).join('\n') || 'Aucune dette active';
+
+  // Goals
+  const goalsDetail = data.goals.map(g =>
+    `${g.emoji} ${g.name}: ${fmtNum(g.saved)}/${fmtNum(g.target)} ${cur} (${Math.round((g.saved/g.target)*100)}%)${g.deadline ? ' | délai: ' + g.deadline : ''}`
+  ).join('\n') || 'Aucun objectif créé';
+
+  // Budgets
+  const budgetsDetail = data.budgets.map(b => {
+    const spent = getBudgetSpent(b.category);
+    return `${b.category}: ${fmtNum(spent)}/${fmtNum(b.limit)} ${cur} (${Math.round((spent/b.limit)*100)}%)`;
+  }).join('\n') || 'Aucun budget';
+
+  return `Tu es un conseiller financier personnel bienveillant, direct et expert. Tu as accès à TOUTES les données financières de l'utilisateur. Réponds en français, de manière personnalisée et actionnable. Utilise des emojis pour rendre la réponse lisible sur mobile. Maximum 250 mots.
+
+═══ PROFIL ═══
+- Nom : ${data.profile.name || 'Inconnu'}
+- Situation : ${typeLabels[data.profile.type] || 'Non précisée'}
+- Devise : ${cur}
+- Objectif d'épargne visé : ${data.profile.savingsGoal || 20}%
+- Score santé financière : ${h.score || 'N/A'}/100 (${h.title})
+
+═══ FINANCES CE MOIS ═══
+- Revenus : ${fmtNum(income)} ${cur}
+- Dépenses : ${fmtNum(expenses)} ${cur}
+- Balance mensuelle : ${fmtNum(income - expenses)} ${cur}
+
+═══ SOLDE TOTAL ═══
+- Solde global : ${fmtNum((data.initialBalance || 0) + allIncome - allExp)} ${cur}
+- Total revenus cumulés : ${fmtNum(allIncome)} ${cur}
+- Total dépenses cumulées : ${fmtNum(allExp)} ${cur}
+
+═══ DÉPENSES PAR CATÉGORIE (avec notes) ═══
+${top5.map(([c, v]) => `${c}: ${fmtNum(v.total)} ${cur}${v.notes.length ? ' — notes: ' + v.notes.slice(0,2).join(', ') : ''}`).join('\n') || 'Aucune'}
+
+═══ TRANSACTIONS RÉCENTES ═══
+${recentTx || 'Aucune'}
+
+═══ DETTES & CRÉANCES ═══
+Je dois en tout : ${fmtNum(totalOwed)} ${cur}
+On me doit en tout : ${fmtNum(totalCredit)} ${cur}
+${debtsDetail}
+
+═══ OBJECTIFS D'ÉPARGNE ═══
+${goalsDetail}
+
+═══ BUDGETS ═══
+${budgetsDetail}
+
+L'utilisateur peut te demander de créer des objectifs, analyser ses dépenses, calculer des délais, ou tout autre conseil financier. Sois précis et utilise les chiffres réels ci-dessus dans ta réponse.`;
+}
+
+async function sendAI() {
+  const input = document.getElementById('ai-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  if (!data.groqKey) { showToast('⚠️ Ajoute ta clé Groq API d\'abord', 'error'); return; }
+
+  input.value = '';
+  appendAIMsg('user', msg);
+  aiHistory.push({ role: 'user', content: msg });
+
+  // Typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'msg msg-ai msg-typing';
+  typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  document.getElementById('ai-messages').appendChild(typing);
+  document.getElementById('ai-messages').scrollTop = 99999;
+
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + data.groqKey,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: buildFinanceContext() },
+          ...aiHistory.slice(-8),
+        ],
+        max_tokens: 400,
+        temperature: 0.7,
+      }),
+    });
+
+    const json = await res.json();
+    typing.remove();
+
+    if (!res.ok) {
+      const errMsg = json.error?.message || 'Erreur API';
+      appendAIMsg('assistant', '❌ ' + errMsg);
+      aiHistory.pop();
+      return;
+    }
+
+    const reply = json.choices?.[0]?.message?.content || 'Pas de réponse.';
+    aiHistory.push({ role: 'assistant', content: reply });
+    appendAIMsg('assistant', reply);
+  } catch (err) {
+    typing.remove();
+    appendAIMsg('assistant', '❌ Erreur de connexion. Vérifie ta clé API et ta connexion internet.');
+    aiHistory.pop();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INITIAL BALANCE
+// ═══════════════════════════════════════════════════════════════
+function openInitialDrawer() {
+  openDrawer('drawer-initial');
+  document.getElementById('init-amount').value = data.initialBalance || '';
+  const cur = data.profile.currency || 'HTG';
+  const display = document.getElementById('current-init-display');
+  display.textContent = data.initialBalance ? `Solde actuel: ${fmtNum(data.initialBalance)} ${cur}` : '';
+}
+
+function saveInitialBalance() {
+  const val = parseFloat(document.getElementById('init-amount').value);
+  if (isNaN(val) || val < 0) { showToast('Montant invalide', 'error'); return; }
+  data.initialBalance = val;
+  save();
+  closeDrawer('drawer-initial');
+  showToast('✅ Solde de départ enregistré !', 'success');
+  renderHome();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DEBTS
+// ═══════════════════════════════════════════════════════════════
+function addDebt() {
+  const amount = parseFloat(document.getElementById('debt-amount').value);
+  const person = document.getElementById('debt-person').value.trim();
+  if (!amount || amount <= 0) { showToast('Montant invalide', 'error'); return; }
+  if (!person) { showToast('Indique avec qui', 'error'); return; }
+  const debtType = document.getElementById('debt-type').value;
+  const debt = {
+    id: Date.now(),
+    type: debtType,
+    amount,
+    person,
+    reason: document.getElementById('debt-reason').value.trim(),
+    date: document.getElementById('debt-date').value || new Date().toISOString().split('T')[0],
+    due: document.getElementById('debt-due').value || '',
+    paid: false,
+    currency: data.profile.currency || 'HTG',
+    affectsBalance: true,
+  };
+  data.debts.unshift(debt);
+  // AFFECT BALANCE: emprunt reçu = revenu, dette = dépense
+  const balanceTx = {
+    id: Date.now() + 1,
+    type: debtType === 'owed_to_me' ? 'income' : 'expense',
+    amount,
+    date: debt.date,
+    category: debtType === 'owed_to_me' ? 'Emprunt reçu' : 'Remboursement dette',
+    note: `${debtType === 'owed_to_me' ? '🟢 ' : '🔴 '}${person}${debt.reason ? ' — ' + debt.reason : ''} (auto)`,
+    currency: debt.currency,
+    debtRef: debt.id,
+  };
+  data.transactions.unshift(balanceTx);
+  save();
+  document.getElementById('debt-amount').value = '';
+  document.getElementById('debt-person').value = '';
+  document.getElementById('debt-reason').value = '';
+  document.getElementById('debt-due').value = '';
+  closeDrawer('drawer-debt');
+  showToast(debtType === 'owed_to_me' ? '🟢 Créance ajoutée (+solde)' : '🔴 Dette enregistrée (-solde)', debtType === 'owed_to_me' ? 'success' : 'error');
+  renderHome();
+  if (currentPage === 'transactions') renderTransactions();
+}
+
+function toggleDebtPaid(id) {
+  const debt = data.debts.find(d => d.id === id);
+  if (!debt) return;
+  const wasPaid = debt.paid;
+  debt.paid = !wasPaid;
+  // When marking a debt as paid: add reverse transaction to show repayment
+  if (debt.paid && debt.affectsBalance) {
+    const reverseTx = {
+      id: Date.now(),
+      type: debt.type === 'owed_by_me' ? 'expense' : 'income',
+      // owed_by_me (je devais) → je rembourse → expense reverse (already counted as expense when added)
+      // Actually: mark paid is just closing the debt, the balance was already adjusted at creation
+      // So no additional tx needed — just mark it resolved
+      amount: 0, date: new Date().toISOString().split('T')[0],
+      category: debt.type === 'owed_by_me' ? 'Remboursement dette' : 'Emprunt reçu',
+      note: `✅ Payé — ${debt.person} (clôturé)`, currency: debt.currency, debtRef: id,
+    };
+    // Don't add a new tx — the original already impacted balance at creation
+  }
+  save();
+  renderHome();
+  if (currentPage === 'transactions') renderTransactions();
+}
+
+function deleteDebt(id) {
+  if (!confirm('Supprimer cette dette ?')) return;
+  data.debts = data.debts.filter(d => d.id !== id);
+  save();
+  renderHome();
+  showToast('Supprimé', 'success');
+}
+
+function debtHTML(d) {
+  const cur = d.currency || 'HTG';
+  const isOwed = d.type === 'owed_by_me';
+  const col = isOwed ? 'var(--red)' : 'var(--green)';
+  const bg = isOwed ? 'var(--red-dim)' : 'var(--green-dim)';
+  const icon = isOwed ? '🔴' : '🟢';
+  const label = isOwed ? 'Je dois à' : 'Me doit';
+  const today = new Date().toISOString().split('T')[0];
+  const overdue = d.due && d.due < today && !d.paid;
+  return `<div class="tx-item" style="${d.paid ? 'opacity:.5;' : ''}">
+    <div class="tx-icon" style="background:${bg};font-size:16px;">${icon}</div>
+    <div class="tx-info">
+      <div class="tx-name" style="font-weight:600;">${d.person}</div>
+      <div class="tx-date">${label} · ${d.reason || 'Aucune raison'}</div>
+      ${d.due ? `<div style="font-size:10px;color:${overdue ? 'var(--red)' : 'var(--text-3)'};">${overdue ? '⚠️ En retard' : '📅'} Échéance: ${new Date(d.due).toLocaleDateString('fr-FR')}</div>` : ''}
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+      <div style="font-family:var(--font-num);font-size:14px;font-weight:700;color:${col};">${isOwed ? '-' : '+'}${fmtNum(d.amount)} <span style="font-size:10px;font-weight:400;">${cur}</span></div>
+      <div style="display:flex;gap:6px;">
+        <button onclick="toggleDebtPaid(${d.id})" style="font-size:10px;padding:3px 7px;border-radius:5px;border:1px solid var(--border);background:${d.paid ? 'var(--green-dim)' : 'var(--surface2)'};color:${d.paid ? 'var(--green)' : 'var(--text-3)'};cursor:pointer;">${d.paid ? '✓ Payé' : 'Marquer payé'}</button>
+        <button onclick="deleteDebt(${d.id})" style="font-size:10px;color:var(--text-3);background:none;border:none;cursor:pointer;">×</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderDebtsPreview() {
+  const el = document.getElementById('debts-preview');
+  if (!el) return;
+  const active = data.debts.filter(d => !d.paid);
+  const totalOwed = data.debts.filter(d => d.type === 'owed_by_me' && !d.paid).reduce((s, d) => s + d.amount, 0);
+  const totalCredit = data.debts.filter(d => d.type === 'owed_to_me' && !d.paid).reduce((s, d) => s + d.amount, 0);
+  const cur = data.profile.currency || 'HTG';
+  if (!data.debts.length) {
+    el.innerHTML = '<div style="color:var(--text-3);font-size:13px;text-align:center;padding:12px 0;">Aucune dette enregistrée</div>';
+    return;
+  }
+  let html = '';
+  if (totalOwed > 0 || totalCredit > 0) {
+    html += `<div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="flex:1;background:var(--red-dim);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--text-3);margin-bottom:2px;">Je dois</div>
+        <div style="font-family:var(--font-num);font-size:15px;font-weight:700;color:var(--red);">${fmtNum(totalOwed)} ${cur}</div>
+      </div>
+      <div style="flex:1;background:var(--green-dim);border-radius:8px;padding:10px;text-align:center;">
+        <div style="font-size:10px;color:var(--text-3);margin-bottom:2px;">On me doit</div>
+        <div style="font-family:var(--font-num);font-size:15px;font-weight:700;color:var(--green);">${fmtNum(totalCredit)} ${cur}</div>
+      </div>
+    </div>`;
+  }
+  html += data.debts.slice(0, 3).map(debtHTML).join('');
+  if (data.debts.length > 3) {
+    html += `<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--violet-soft);cursor:pointer;" onclick="openDebtsPage()">Voir tout (${data.debts.length}) →</div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════════════
+function fmtNum(n) {
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+  if (n >= 1000) return Math.round(n).toLocaleString('fr-FR');
+  return Math.round(n).toString();
+}
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type ? 'show ' + type : 'show';
+  clearTimeout(t._to);
+  t._to = setTimeout(() => { t.className = ''; }, 2800);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CONVERTER
+// ═══════════════════════════════════════════════════════════════
+const CURRENCIES = [
+  { code: 'HTG', flag: '🇭🇹', name: 'Gourde haïtienne' },
+  { code: 'USD', flag: '🇺🇸', name: 'Dollar américain' },
+  { code: 'EUR', flag: '🇪🇺', name: 'Euro' },
+  { code: 'CAD', flag: '🇨🇦', name: 'Dollar canadien' },
+  { code: 'MXN', flag: '🇲🇽', name: 'Peso mexicain' },
+  { code: 'CLP', flag: '🇨🇱', name: 'Peso chilien' },
+  { code: 'DOP', flag: '🇩🇴', name: 'Peso dominicain' },
+  { code: 'GBP', flag: '🇬🇧', name: 'Livre sterling' },
+  { code: 'BRL', flag: '🇧🇷', name: 'Real brésilien' },
+  { code: 'COP', flag: '🇨🇴', name: 'Peso colombien' },
+  { code: 'ARS', flag: '🇦🇷', name: 'Peso argentin' },
+  { code: 'JPY', flag: '🇯🇵', name: 'Yen japonais' },
+  { code: 'CNY', flag: '🇨🇳', name: 'Yuan chinois' },
+  { code: 'XOF', flag: '🌍', name: 'Franc CFA Ouest' },
+  { code: 'FCFA', flag: '🌍', name: 'Franc CFA' },
+  { code: 'NGN', flag: '🇳🇬', name: 'Naira nigérian' },
+  { code: 'CHF', flag: '🇨🇭', name: 'Franc suisse' },
+  { code: 'TRY', flag: '🇹🇷', name: 'Livre turque' },
+  { code: 'INR', flag: '🇮🇳', name: 'Roupie indienne' },
+];
+
+// Rates stored as { base:'USD', rates:{HTG:130,...}, updatedAt: timestamp, isLive: bool }
+let convRates = DB.get('convRates', null);
+
+async function fetchRates() {
+  const dot = document.getElementById('conv-status-dot');
+  const txt = document.getElementById('conv-status-text');
+  dot.style.background = 'var(--amber)';
+  txt.textContent = 'Chargement...';
+  try {
+    // Free API, no key needed — rates relative to USD
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    // Add FCFA as alias for XOF
+    json.rates.FCFA = json.rates.XOF || 655.957;
+    convRates = { base: 'USD', rates: json.rates, updatedAt: Date.now(), isLive: true };
+    DB.set('convRates', convRates);
+    dot.style.background = 'var(--green)';
+    const t = new Date(convRates.updatedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    txt.textContent = '✓ Taux en direct · ' + t;
+    showToast('✅ Taux actualisés !', 'success');
+  } catch (e) {
+    // Fallback: try second free API
+    try {
+      const res2 = await fetch('https://open.er-api.com/v6/latest/USD');
+      const json2 = await res2.json();
+      json2.rates.FCFA = json2.rates.XOF || 655.957;
+      convRates = { base: 'USD', rates: json2.rates, updatedAt: Date.now(), isLive: true };
+      DB.set('convRates', convRates);
+      dot.style.background = 'var(--green)';
+      const t = new Date(convRates.updatedAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      txt.textContent = '✓ Taux en direct · ' + t;
+      showToast('✅ Taux actualisés !', 'success');
+    } catch (e2) {
+      dot.style.background = 'var(--red)';
+      txt.textContent = '⚠ Hors-ligne — taux approximatifs';
+      // Use hardcoded fallback rates (relative to USD)
+      convRates = { base: 'USD', rates: {
+        USD:1, HTG:132.5, EUR:0.92, CAD:1.36, MXN:17.2, CLP:950, DOP:58.5,
+        GBP:0.79, BRL:4.97, COP:3950, ARS:890, JPY:149, CNY:7.24,
+        XOF:609, FCFA:609, NGN:1550, CHF:0.90, TRY:32.1, INR:83.1
+      }, updatedAt: null, isLive: false };
+      showToast('⚠️ Mode hors-ligne', 'error');
+    }
+  }
+  convert();
+  renderPairs();
+}
+
+function getRate(from, to) {
+  if (!convRates) return null;
+  const r = convRates.rates;
+  if (!r[from] || !r[to]) return null;
+  // Convert via USD base
+  return r[to] / r[from];
+}
+
+function fmtConv(n, code) {
+  if (n === null || isNaN(n)) return '—';
+  // Large numbers (CLP, ARS, etc.)
+  if (Math.abs(n) >= 1000000) return n.toLocaleString('fr-FR', {maximumFractionDigits:0});
+  if (Math.abs(n) >= 1000) return n.toLocaleString('fr-FR', {maximumFractionDigits:2});
+  if (Math.abs(n) >= 1) return n.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:4});
+  return n.toLocaleString('fr-FR', {minimumFractionDigits:4, maximumFractionDigits:6});
+}
+
+function populateConverterSelects() {
+  const fromSel = document.getElementById('conv-from');
+  const toSel = document.getElementById('conv-to');
+  if (!fromSel) return;
+  const opts = CURRENCIES.map(c => `<option value="${c.code}">${c.flag} ${c.code} — ${c.name}</option>`).join('');
+  fromSel.innerHTML = opts;
+  toSel.innerHTML = opts;
+  // Defaults: from = user currency or HTG, to = USD
+  const userCur = data.profile.currency || 'HTG';
+  fromSel.value = userCur;
+  toSel.value = userCur === 'USD' ? 'EUR' : 'USD';
+}
+
+function convert() {
+  const from = document.getElementById('conv-from')?.value;
+  const to = document.getElementById('conv-to')?.value;
+  const amount = parseFloat(document.getElementById('conv-amount')?.value) || 0;
+  const resultEl = document.getElementById('conv-result');
+  const resultCurEl = document.getElementById('conv-result-cur');
+  const rateInfoEl = document.getElementById('conv-rate-info');
+  const dhBox = document.getElementById('conv-dh-box');
+  const dhResult = document.getElementById('conv-dh-result');
+  if (!from || !to) return;
+
+  const rate = getRate(from, to);
+  if (rate === null) {
+    resultEl.textContent = '—';
+    resultCurEl.textContent = 'Chargement...';
+    return;
+  }
+
+  const result = amount * rate;
+  resultEl.textContent = fmtConv(result, to);
+  resultCurEl.textContent = to;
+
+  const reverseRate = getRate(to, from);
+  rateInfoEl.textContent = `1 ${from} = ${fmtConv(rate, to)} ${to}  ·  1 ${to} = ${fmtConv(reverseRate, from)} ${from}`;
+
+  // Dollar Haïtien special box: show if HTG is involved
+  if (from === 'HTG' || to === 'HTG') {
+    dhBox.style.display = 'block';
+    if (from === 'HTG') {
+      dhResult.textContent = fmtConv(amount / 5, 'DH');
+      dhBox.querySelector('.card-sub, div div:first-child').textContent = '';
+    } else {
+      // to is HTG, show result in DH
+      dhResult.textContent = fmtConv(result / 5, 'DH');
+    }
+  } else {
+    dhBox.style.display = 'none';
+  }
+
+  renderConvTable(from, amount);
+}
+
+function swapCurrencies() {
+  const from = document.getElementById('conv-from');
+  const to = document.getElementById('conv-to');
+  [from.value, to.value] = [to.value, from.value];
+  convert();
+}
+
+function renderConvTable(baseCur, baseAmt) {
+  const el = document.getElementById('conv-table');
+  const baseLabel = document.getElementById('conv-table-base');
+  const curLabel = document.getElementById('conv-table-cur');
+  if (baseLabel) baseLabel.textContent = baseAmt || 1;
+  if (curLabel) curLabel.textContent = baseCur;
+  const targets = CURRENCIES.filter(c => c.code !== baseCur).slice(0, 12);
+  el.innerHTML = targets.map(c => {
+    const rate = getRate(baseCur, c.code);
+    const val = rate !== null ? fmtConv((baseAmt || 1) * rate, c.code) : '—';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">${c.flag}</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;">${c.code}</div>
+          <div style="font-size:10px;color:var(--text-3);">${c.name}</div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-num);font-size:14px;font-weight:600;color:var(--text);">${val}</div>
+    </div>`;
+  }).join('');
+  // DH row if base is HTG
+  if (baseCur === 'HTG') {
+    el.innerHTML += `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">🇭🇹</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--amber);">DH</div>
+          <div style="font-size:10px;color:var(--text-3);">Dollar Haïtien (1 DH = 5 HTG)</div>
+        </div>
+      </div>
+      <div style="font-family:var(--font-num);font-size:14px;font-weight:600;color:var(--amber);">${fmtConv((baseAmt || 1) / 5, 'DH')}</div>
+    </div>`;
+  }
+}
+
+const POPULAR_PAIRS = [
+  ['HTG','USD'], ['HTG','EUR'], ['HTG','DOP'],
+  ['USD','EUR'], ['USD','CAD'], ['USD','MXN'],
+  ['EUR','GBP'], ['USD','BRL'],
+];
+
+function renderPairs() {
+  const el = document.getElementById('conv-pairs');
+  if (!el) return;
+  el.innerHTML = POPULAR_PAIRS.map(([from, to]) => {
+    const rate = getRate(from, to);
+    const fc = CURRENCIES.find(c => c.code === from);
+    const tc = CURRENCIES.find(c => c.code === to);
+    const val = rate !== null ? fmtConv(rate, to) : '—';
+    const change = ''; // no history available with free API
+    return `<div class="card card-sm" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="setPair('${from}','${to}')">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:20px;">${fc?.flag || ''}</span>
+        <div>
+          <div style="font-size:13px;font-weight:600;">${from} → ${to}</div>
+          <div style="font-size:11px;color:var(--text-3);">${fc?.name || ''}</div>
+        </div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-family:var(--font-num);font-size:15px;font-weight:700;">${val} <span style="font-size:10px;font-weight:400;color:var(--text-3);">${to}</span></div>
+        <div style="font-size:10px;color:var(--text-3);">par 1 ${from}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setPair(from, to) {
+  document.getElementById('conv-from').value = from;
+  document.getElementById('conv-to').value = to;
+  document.getElementById('conv-amount').value = 1;
+  convert();
+  document.getElementById('app').scrollTo(0, 0);
+}
+
+function renderConverterPage() {
+  populateConverterSelects();
+  // Update status
+  const dot = document.getElementById('conv-status-dot');
+  const txt = document.getElementById('conv-status-text');
+  if (convRates) {
+    if (convRates.isLive) {
+      dot.style.background = 'var(--green)';
+      const ago = Math.round((Date.now() - convRates.updatedAt) / 60000);
+      txt.textContent = ago < 1 ? '✓ Taux en direct (maintenant)' : `✓ Actualisé il y a ${ago} min`;
+    } else {
+      dot.style.background = 'var(--amber)';
+      txt.textContent = '⚠ Taux approximatifs (hors-ligne)';
+    }
+  } else {
+    dot.style.background = 'var(--text-3)';
+    txt.textContent = 'Appuie sur ↻ pour charger les taux';
+    // Auto-fetch on first visit
+    fetchRates();
+    return;
+  }
+  convert();
+  renderPairs();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════════════════════════
+let isDark = DB.get('theme', 'dark') !== 'light';
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-btn').textContent = isDark ? '🌙' : '☀️';
+  DB.set('theme', isDark ? 'dark' : 'light');
+}
+function toggleTheme() { isDark = !isDark; applyTheme(); }
+
+// ═══════════════════════════════════════════════════════════════
+//  AI HERO (homepage quick chat)
+// ═══════════════════════════════════════════════════════════════
+let aiHeroLoading = false;
+async function sendAIHero() {
+  if (aiHeroLoading) return;
+  const input = document.getElementById('ai-hero-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  if (!data.groqKey) {
+    document.getElementById('ai-hero-response').style.display = 'block';
+    document.getElementById('ai-hero-response').textContent = '⚠️ Configure ta clé Groq API dans la section IA pour activer le conseiller.';
+    return;
+  }
+  aiHeroLoading = true;
+  const respEl = document.getElementById('ai-hero-response');
+  respEl.style.display = 'block';
+  respEl.textContent = '⏳ Analyse en cours...';
+  input.value = '';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.groqKey },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: buildFinanceContext() },
+          { role: 'user', content: msg }
+        ],
+        max_tokens: 350, temperature: 0.7,
+      }),
+    });
+    const json = await res.json();
+    const reply = json.choices?.[0]?.message?.content || 'Pas de réponse.';
+    respEl.innerHTML = reply.replace(/\n/g, '<br>');
+    // Also add to full AI chat history
+    aiHistory.push({ role: 'user', content: msg });
+    aiHistory.push({ role: 'assistant', content: reply });
+  } catch (e) {
+    respEl.textContent = '❌ Erreur de connexion.';
+  }
+  aiHeroLoading = false;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SAVINGS GOALS
+// ═══════════════════════════════════════════════════════════════
+let selectedGoalEmoji = '⭐';
+
+function selectGoalEmoji(emoji) {
+  selectedGoalEmoji = emoji;
+  document.getElementById('goal-emoji').value = emoji;
+}
+
+function openGoalDeposit(goalId) {
+  const goal = data.goals.find(g => g.id === goalId);
+  if (!goal) return;
+  document.getElementById('deposit-goal-id').value = goalId;
+  document.getElementById('deposit-goal-name').textContent = `${goal.emoji} ${goal.name} — encore ${fmt(goal.target - goal.saved)} à atteindre`;
+  const cur = data.profile.currency || 'HTG';
+  document.getElementById('deposit-currency-prefix').textContent = cur;
+  document.getElementById('deposit-amount').value = '';
+  document.getElementById('overlay-goal-deposit').classList.add('open');
+}
+
+function depositToGoal() {
+  const goalId = parseInt(document.getElementById('deposit-goal-id').value);
+  const amount = parseFloat(document.getElementById('deposit-amount').value);
+  if (!amount || amount <= 0) { showToast('Montant invalide', 'error'); return; }
+  const goal = data.goals.find(g => g.id === goalId);
+  if (!goal) return;
+  goal.saved = Math.min(goal.saved + amount, goal.target);
+  save();
+  document.getElementById('overlay-goal-deposit').classList.remove('open');
+  showToast(goal.saved >= goal.target ? '🎉 Objectif atteint !' : '✅ Épargne ajoutée !', 'success');
+  renderGoals();
+}
+
+function addGoal() {
+  const name = document.getElementById('goal-name').value.trim();
+  const target = parseFloat(document.getElementById('goal-target').value);
+  const emoji = document.getElementById('goal-emoji').value || selectedGoalEmoji;
+  const initialSaved = parseFloat(document.getElementById('goal-initial-saved').value) || 0;
+  const deadline = document.getElementById('goal-deadline').value;
+  if (!name) { showToast('Donne un nom à ton objectif', 'error'); return; }
+  if (!target || target <= 0) { showToast('Montant cible invalide', 'error'); return; }
+  const goal = {
+    id: Date.now(),
+    name, emoji, target,
+    saved: Math.min(initialSaved, target),
+    deadline: deadline || null,
+    createdAt: new Date().toISOString().split('T')[0],
+    currency: data.profile.currency || 'HTG',
+  };
+  data.goals.unshift(goal);
+  save();
+  document.getElementById('overlay-goal').classList.remove('open');
+  document.getElementById('goal-name').value = '';
+  document.getElementById('goal-target').value = '';
+  document.getElementById('goal-initial-saved').value = '';
+  document.getElementById('goal-deadline').value = '';
+  document.getElementById('goal-emoji').value = '';
+  showToast('🎯 Objectif créé !', 'success');
+  renderGoals();
+}
+
+function deleteGoal(id) {
+  if (!confirm('Supprimer cet objectif ?')) return;
+  data.goals = data.goals.filter(g => g.id !== id);
+  save();
+  renderGoals();
+  showToast('Objectif supprimé', 'success');
+}
+
+function renderGoals() {
+  const cur = data.profile.currency || 'HTG';
+  // Update currency prefixes for goal drawers
+  document.querySelectorAll('#goal-currency-prefix,#goal-saved-prefix').forEach(el => el.textContent = cur);
+
+  const totalSaved = data.goals.reduce((s, g) => s + g.saved, 0);
+  const activeCount = data.goals.filter(g => g.saved < g.target).length;
+  document.getElementById('goals-total-saved').textContent = fmt(totalSaved);
+  document.getElementById('goals-count').textContent = activeCount;
+
+  const el = document.getElementById('goals-list');
+  if (!data.goals.length) {
+    el.innerHTML = `<div class="empty-state"><div class="icon">🎯</div><p>Aucun objectif encore.<br>Crée ton premier objectif d'épargne !</p></div>`;
+    return;
+  }
+
+  el.innerHTML = data.goals.map(g => {
+    const pct = g.target > 0 ? Math.min(100, Math.round((g.saved / g.target) * 100)) : 0;
+    const remaining = Math.max(0, g.target - g.saved);
+    const isCompleted = pct >= 100;
+    let deadlineHtml = '';
+    if (g.deadline) {
+      const daysLeft = Math.ceil((new Date(g.deadline) - new Date()) / 86400000);
+      const dlColor = daysLeft < 7 ? 'var(--red)' : daysLeft < 30 ? 'var(--amber)' : 'var(--text-3)';
+      deadlineHtml = `<div style="font-size:11px;color:${dlColor};margin-top:6px;">
+        ${isCompleted ? '✅ Complété !' : daysLeft <= 0 ? '⚠ Délai dépassé' : `⏳ ${daysLeft} jour${daysLeft>1?'s':''} restant${daysLeft>1?'s':''}`}
+      </div>`;
+    }
+    return `<div class="goal-card ${isCompleted ? 'completed' : ''}">
+      <span class="goal-emoji">${g.emoji}</span>
+      <div class="goal-title">${g.name}</div>
+      <div class="goal-subtitle">Créé le ${g.createdAt} · ${cur}</div>
+      <div class="goal-amounts">
+        <div class="goal-saved ${isCompleted ? 'pos' : ''}">${fmt(g.saved)}</div>
+        <div class="goal-target">/ ${fmt(g.target)}</div>
+      </div>
+      <div class="goal-progress-bar">
+        <div class="goal-progress-fill" style="width:${pct}%"></div>
+      </div>
+      <div class="goal-meta">
+        <div class="goal-pct">${pct}%</div>
+        <div class="goal-remaining">${isCompleted ? '🏆 Objectif atteint !' : `${fmt(remaining)} restant`}</div>
+      </div>
+      ${deadlineHtml}
+      <div class="goal-actions">
+        ${!isCompleted ? `<button class="goal-add-btn" onclick="openGoalDeposit(${g.id})">+ Ajouter de l'épargne</button>` : `<button class="goal-add-btn" style="background:var(--green-dim);border-color:var(--green);color:var(--green);" disabled>🎉 Complété !</button>`}
+        <button class="goal-del-btn" onclick="deleteGoal(${g.id})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+renderHome();
+applyTheme();
+// Load Groq key into field if present
+if (data.groqKey) document.getElementById('groq-key').value = '••••••••••••••••';
+</script>
+</body>
+</html>
