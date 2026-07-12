@@ -1564,7 +1564,7 @@ let aiHistory = [];
 
 function renderAIPage() {
   const key = data.groqKey;
-  document.getElementById('groq-key').value = key ? '••••••••••••••••' : '';
+  document.getElementById('groq-key').value = key ? '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' : '';
   const chipsEl = document.getElementById('ai-chips');
   chipsEl.innerHTML = QUICK_PROMPTS.map(p => `<div class="chip" onclick="quickPrompt('${p}')">${p}</div>`).join('');
 }
@@ -1574,7 +1574,7 @@ function saveApiKey() {
   if (!val || val.startsWith('•')) { showToast('Colle ta vraie clé API', 'error'); return; }
   data.groqKey = val;
   save();
-  document.getElementById('groq-key').value = '••••••••••••••••';
+  document.getElementById('groq-key').value = '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';
   showToast('✅ Clé API sauvegardée !', 'success');
   appendAIMsg('assistant', '✅ Clé API enregistrée ! Je suis prêt à analyser tes finances. Pose-moi une question ou clique sur une suggestion !');
 }
@@ -2583,7 +2583,7 @@ function renderGoals() {
 renderHome();
 applyTheme();
 // Load Groq key into field if present
-if (data.groqKey) document.getElementById('groq-key').value = '••••••••••••••••';
+if (data.groqKey) document.getElementById('groq-key').value = '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';
 </script>
 </body>
   </html>
