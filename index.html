@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Wallet — Portefeuille Intelligent</title>
+<meta name="description" content="Portefeuille Intelligent — gère tes revenus, dépenses, dettes, objectifs et budgets avec un conseiller IA.">
+<meta property="og:title" content="Wallet — Portefeuille Intelligent">
+<meta property="og:description" content="Gère tes revenus, dépenses, dettes, objectifs et budgets avec un conseiller IA.">
+<meta property="og:image" content="https://i.postimg.cc/sXz7R2wM/file-000000006e68722f85fb43e2c0fdb6d7.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Wallet — Portefeuille Intelligent">
+<meta name="twitter:description" content="Gère tes revenus, dépenses, dettes, objectifs et budgets avec un conseiller IA.">
+<meta name="twitter:image" content="https://i.postimg.cc/sXz7R2wM/file-000000006e68722f85fb43e2c0fdb6d7.png">
+<link rel="icon" type="image/png" href="https://i.postimg.cc/sXz7R2wM/file-000000006e68722f85fb43e2c0fdb6d7.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -383,30 +393,211 @@ textarea { resize: none; min-height: 80px; }
   width: 150px; height: 150px; background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%);
   pointer-events: none;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   UI/UX REFRESH — header, hero legibility, budgets, health,
+   transactions, icons, responsive layout
+   (Visual layer only — no logic / data / function changes)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Icon helper (Lucide-style inline icons) */
+.icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.icon svg { width: 100%; height: 100%; }
+
+/* ── HEADER GLASSMORPHISM ── */
+.app-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 16px 14px; margin: 4px 4px 4px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.10) 0%, rgba(124,58,237,0.02) 100%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  backdrop-filter: blur(10px);
+}
+.app-header .greet { font-size: 12px; color: var(--text-3); font-weight: 500; display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+.app-header h1 { font-family: var(--font-num); font-size: 19px; font-weight: 700; letter-spacing: -.2px; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: transform .18s cubic-bezier(.34,1.56,.64,1), background .2s, border-color .2s;
+  color: var(--text-2); flex-shrink: 0;
+}
+.icon-btn:active { transform: scale(.90); }
+.icon-btn:hover { border-color: var(--violet); color: var(--violet-soft); }
+.icon-btn .icon { width: 18px; height: 18px; }
+#theme-btn .icon { width: 18px; height: 18px; }
+#balance-eye-btn .icon svg { transition: opacity .2s ease; }
+
+/* ── HERO — force legible light text regardless of theme (card bg is always dark) ── */
+.hero-card, .hero-card .hero-label, .hero-card .hero-amount,
+.hero-card .hero-stat-label { color: rgba(255,255,255,0.92); }
+.hero-card .hero-amount { color: #FFFFFF; }
+.hero-card .hero-amount .currency { color: rgba(255,255,255,0.55); }
+.hero-card .hero-label { color: rgba(255,255,255,0.55); }
+.hero-card .hero-stat-label { color: rgba(255,255,255,0.45); }
+.hero-card .hero-stat-val.pos { color: #4ADE80; }
+.hero-card .hero-stat-val.neg { color: #F87171; }
+.hero-card .hero-sub { border-top: 1px solid rgba(255,255,255,0.08); padding-top: 14px; }
+.hero-card .hero-top-row { display: flex; align-items: flex-start; justify-content: space-between; }
+.balance-blur { filter: blur(10px); user-select: none; transition: filter .25s ease; }
+
+/* ── PREMIUM BUDGET BAR ── */
+.budget-item-pro {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 10px;
+  transition: border-color .2s;
+}
+.budget-item-pro:hover { border-color: rgba(124,58,237,0.35); }
+.budget-pro-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.budget-pro-name { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.budget-pro-amounts { font-family: var(--font-num); font-size: 12px; color: var(--text-3); text-align: right; }
+.budget-pro-amounts b { color: var(--text); font-weight: 700; }
+.budget-pro-bar-row { display: flex; align-items: center; gap: 10px; }
+.budget-pro-track { flex: 1; height: 10px; border-radius: 20px; background: var(--border); overflow: hidden; position: relative; }
+.budget-pro-fill {
+  height: 100%; border-radius: 20px;
+  background: linear-gradient(90deg, var(--violet) 0%, #4F8DF7 100%);
+  transition: width .7s cubic-bezier(.16,1,.3,1);
+  position: relative;
+}
+.budget-pro-fill.warn { background: linear-gradient(90deg, #F59E0B 0%, #FB923C 100%); }
+.budget-pro-fill.danger { background: linear-gradient(90deg, #EF4444 0%, #F43F5E 100%); }
+.budget-pro-fill::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+  animation: shimmer 2.2s ease-in-out infinite;
+}
+@keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+.budget-pro-pct {
+  font-family: var(--font-num); font-size: 13px; font-weight: 700;
+  min-width: 42px; text-align: right; color: var(--violet-soft);
+}
+.budget-pro-pct.warn { color: var(--amber); }
+.budget-pro-pct.danger { color: var(--red); }
+.budget-pro-status { font-size: 11px; margin-top: 8px; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+
+/* ── HEALTH CARD PRO ── */
+.health-card-pro { position: relative; overflow: hidden; }
+.health-state-icon { width: 20px; height: 20px; }
+.health-wrap { position: relative; }
+.ring-container svg circle { transition: stroke-dashoffset .9s cubic-bezier(.16,1,.3,1), stroke .4s ease; }
+.health-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
+  padding: 3px 9px; border-radius: 20px; margin-top: 6px;
+}
+
+/* ── TRANSACTIONS PRO ── */
+.tx-item { border-radius: 12px; padding: 11px 8px; transition: background .15s ease; }
+.tx-item:hover { background: var(--surface2); }
+.tx-icon { transition: transform .15s ease; }
+.tx-item:hover .tx-icon { transform: scale(1.06); }
+.tx-name { font-weight: 600; }
+.tx-cat-badge {
+  font-size: 10px; font-weight: 600; color: var(--text-3); background: var(--surface2);
+  border: 1px solid var(--border); padding: 2px 7px; border-radius: 6px; display: inline-block; margin-top: 3px;
+}
+.tx-amount { font-weight: 700; }
+
+/* ── DASHBOARD CARD POLISH ── */
+.card {
+  border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02), 0 8px 24px -12px rgba(20,10,50,0.10);
+  transition: box-shadow .2s ease, border-color .2s ease;
+}
+[data-theme="dark"] .card, :root .card { box-shadow: 0 1px 2px rgba(0,0,0,0.15), 0 8px 24px -12px rgba(0,0,0,0.35); }
+[data-theme="light"] .card { box-shadow: 0 1px 2px rgba(20,10,50,0.03), 0 8px 24px -14px rgba(20,10,50,0.12); }
+.quick-btn { border-radius: 16px; }
+.quick-icon { transition: transform .18s cubic-bezier(.34,1.56,.64,1); }
+.quick-btn:hover .quick-icon { transform: translateY(-2px) scale(1.05); }
+.quick-icon .icon { width: 18px; height: 18px; }
+
+/* ── RESPONSIVE: TABLET & DESKTOP ── */
+@media (min-width: 768px) {
+  body { max-width: 100%; }
+  #app { padding-bottom: 40px; }
+  #bottom-nav { display: none; }
+  .dashboard-shell {
+    max-width: 1180px; margin: 0 auto; padding: 24px 28px 48px;
+    display: grid; grid-template-columns: 320px 1fr; gap: 20px; align-items: start;
+  }
+  .dashboard-side { display: flex; flex-direction: column; gap: 0; }
+  .dashboard-main { display: flex; flex-direction: column; gap: 0; }
+  .desktop-sidebar {
+    display: flex; flex-direction: column; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 18px;
+    padding: 14px; margin-bottom: 12px; position: sticky; top: 24px;
+  }
+  .desktop-sidebar .nav-item-d {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 12px;
+    cursor: pointer; color: var(--text-2); font-size: 13.5px; font-weight: 600; border: none;
+    background: none; text-align: left; transition: background .15s, color .15s;
+  }
+  .desktop-sidebar .nav-item-d:hover { background: var(--surface2); }
+  .desktop-sidebar .nav-item-d.active { background: var(--violet-dim); color: var(--violet-soft); }
+  .desktop-sidebar .nav-item-d .icon { width: 18px; height: 18px; }
+  #page-home.active, #page-transactions.active, #page-budgets.active, #page-ai.active, #page-profile.active, #page-goals.active, #page-converter.active { display: block; }
+  .page { padding: 0; min-height: 0; }
+  .quick-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1024px) {
+  .dashboard-shell { grid-template-columns: 340px 1fr; }
+  .hero-amount { font-size: 46px; }
+}
+@media (max-width: 767px) {
+  .desktop-sidebar { display: none; }
+}
 </style>
 </head>
 <body>
 
-<div id="app">
+<div class="dashboard-shell">
+<aside class="dashboard-side">
+  <nav class="desktop-sidebar">
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 10px 14px;">
+      <span class="icon" style="width:22px;height:22px;color:var(--violet-soft);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><circle cx="17" cy="15" r="1.4" fill="currentColor" stroke="none"/></svg></span>
+      <span style="font-family:var(--font-num);font-weight:700;font-size:15px;">Wallet</span>
+    </div>
+    <button class="nav-item-d active" onclick="navigate('home')" id="nav-d-home"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>Accueil</button>
+    <button class="nav-item-d" onclick="navigate('transactions')" id="nav-d-transactions"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>Transactions</button>
+    <button class="nav-item-d" onclick="navigate('budgets')" id="nav-d-budgets"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>Budgets</button>
+    <button class="nav-item-d" onclick="navigate('goals')" id="nav-d-goals"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span>Objectifs</button>
+    <button class="nav-item-d" onclick="navigate('converter')" id="nav-d-converter"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg></span>Convertir</button>
+    <button class="nav-item-d" onclick="navigate('ai')" id="nav-d-ai"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="11"/></svg></span>IA Conseiller</button>
+    <button class="nav-item-d" onclick="navigate('profile')" id="nav-d-profile"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>Profil</button>
+  </nav>
+</aside>
+<div id="app" class="dashboard-main">
 
   <!-- ═══════════════════ PAGE: ACCUEIL ═══════════════════ -->
   <div class="page active" id="page-home">
-    <div class="page-header">
+    <div class="app-header">
       <div>
-        <div style="font-size:12px;color:var(--text-3);margin-bottom:2px;">Bonjour 👋</div>
+        <div class="greet">
+          <span class="icon" style="width:14px;height:14px;color:var(--violet-soft);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1M18.36 5.64l-.7.7M21 12h-1M6.34 6.34l-.7-.7M3 12H2M6.34 17.66l-.7.7M12 21v-1M18.36 18.36l-.7-.7"/><circle cx="12" cy="12" r="4"/></svg></span>
+          Bonjour
+        </div>
         <h1 id="display-name">Mon Wallet</h1>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div class="header-actions">
         <span class="header-badge" id="profile-badge" style="background:var(--violet-dim);color:var(--violet-soft);">—</span>
-        <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Changer le thème">🌙</button>
+        <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="Changer le thème">
+          <span class="icon" id="theme-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+        </button>
       </div>
     </div>
 
     <!-- Hero Balance -->
     <div class="hero-card">
-      <div class="hero-label" id="hero-label-text">Solde disponible</div>
-      <div class="hero-amount"><span class="currency" id="hero-currency-label">HTG</span><span id="hero-balance">0</span></div>
-      <div id="dh-convert-line" style="display:none;margin-top:6px;margin-bottom:-4px;font-size:12px;color:var(--amber);font-weight:500;letter-spacing:.02em;">
+      <div class="hero-top-row">
+        <div class="hero-label" id="hero-label-text">Solde disponible</div>
+        <button class="icon-btn" id="balance-eye-btn" onclick="toggleBalanceVisibility()" title="Afficher / masquer le solde" style="background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.85);">
+          <span class="icon" id="eye-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+        </button>
+      </div>
+      <div class="hero-amount" id="hero-amount-wrap"><span class="currency" id="hero-currency-label">HTG</span><span id="hero-balance">0</span></div>
+      <div id="dh-convert-line" style="display:none;margin-top:6px;margin-bottom:-4px;font-size:12px;color:#FCD34D;font-weight:500;letter-spacing:.02em;">
         ≈ <span id="hero-balance-dh">0</span> <span style="font-size:10px;opacity:.8;">Dollar Haïtien</span>
       </div>
       <div class="hero-sub">
@@ -426,8 +617,11 @@ textarea { resize: none; min-height: 80px; }
     </div>
 
     <!-- Health Ring -->
-    <div class="card">
-      <div class="card-title">Santé Financière</div>
+    <div class="card health-card-pro">
+      <div class="card-title" style="display:flex;align-items:center;gap:7px;">
+        <span class="icon" style="width:14px;height:14px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
+        Santé Financière
+      </div>
       <div class="health-wrap">
         <div class="ring-container">
           <svg width="90" height="90" viewBox="0 0 90 90">
@@ -443,6 +637,7 @@ textarea { resize: none; min-height: 80px; }
         <div class="health-info">
           <div class="health-title" id="health-title">Configure ton profil</div>
           <div class="health-desc" id="health-desc">Ajoute tes revenus et dépenses pour voir ton score de santé financière.</div>
+          <span class="health-badge" id="health-badge" style="display:none;"></span>
         </div>
       </div>
       <!-- Detail metrics -->
@@ -468,6 +663,8 @@ textarea { resize: none; min-height: 80px; }
       <div class="health-tip-bar" id="health-ai-tip" style="display:none;">
         <strong>💡 Conseil IA :</strong> <span id="health-ai-tip-text">Chargement...</span>
       </div>
+      <!-- Debt reminder popups render here -->
+      <div id="debt-reminders-zone"></div>
     </div>
 
     <!-- AI Hero Widget -->
@@ -486,37 +683,37 @@ textarea { resize: none; min-height: 80px; }
     <!-- Quick Actions -->
     <div class="quick-grid" style="grid-template-columns:repeat(4,1fr);">
       <button class="quick-btn" onclick="openDrawer('drawer-income')">
-        <div class="quick-icon" style="background:var(--green-dim);">💰</div>
+        <div class="quick-icon" style="background:var(--green-dim);color:var(--green);"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg></span></div>
         <span>Revenu</span>
       </button>
       <button class="quick-btn" onclick="openDrawer('drawer-expense')">
-        <div class="quick-icon" style="background:var(--red-dim);">💸</div>
+        <div class="quick-icon" style="background:var(--red-dim);color:var(--red);"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></span></div>
         <span>Dépense</span>
       </button>
       <button class="quick-btn" onclick="openDrawer('drawer-debt')">
-        <div class="quick-icon" style="background:rgba(239,68,68,0.18);">💳</div>
+        <div class="quick-icon" style="background:rgba(239,68,68,0.18);color:var(--red);"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></span></div>
         <span>Dette</span>
       </button>
       <button class="quick-btn" onclick="openDrawer('drawer-budget')">
-        <div class="quick-icon" style="background:var(--amber-dim);">📊</div>
+        <div class="quick-icon" style="background:var(--amber-dim);color:var(--amber);"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span></div>
         <span>Budget</span>
       </button>
     </div>
     <div class="quick-grid" style="grid-template-columns:repeat(4,1fr);margin-top:-4px;">
       <button class="quick-btn" onclick="navigate('goals')">
-        <div class="quick-icon" style="background:var(--violet-dim);">🎯</div>
+        <div class="quick-icon" style="background:var(--violet-dim);color:var(--violet-soft);"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span></div>
         <span>Objectifs</span>
       </button>
       <button class="quick-btn" onclick="navigate('converter')">
-        <div class="quick-icon" style="background:rgba(16,185,129,0.12);">💱</div>
+        <div class="quick-icon" style="background:rgba(16,185,129,0.12);color:var(--green);"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></span></div>
         <span>Convertir</span>
       </button>
       <button class="quick-btn" onclick="navigate('ai')">
-        <div class="quick-icon" style="background:var(--violet-dim);">🤖</div>
+        <div class="quick-icon" style="background:var(--violet-dim);color:var(--violet-soft);"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg></span></div>
         <span>IA</span>
       </button>
       <button class="quick-btn" onclick="openDrawer('drawer-initial')">
-        <div class="quick-icon" style="background:rgba(16,185,129,0.15);">🏦</div>
+        <div class="quick-icon" style="background:rgba(16,185,129,0.15);color:var(--green);"><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></span></div>
         <span>Solde</span>
       </button>
     </div>
@@ -605,14 +802,10 @@ textarea { resize: none; min-height: 80px; }
       </div>
     </div>
     <div style="padding:0 16px 16px;">
-      <!-- API Key -->
+      <!-- API Key status (key is embedded in code, see the CONFIG block near the top of the JS) -->
       <div class="card card-sm" style="margin-bottom:12px;" id="api-key-section">
-        <div class="card-title">Clé API Groq</div>
-        <div class="ai-key-row">
-          <input type="password" id="groq-key" placeholder="gsk_..." value="">
-          <button class="btn btn-sm btn-primary" onclick="saveApiKey()">Sauver</button>
-        </div>
-        <p style="font-size:11px;color:var(--text-3);margin-top:8px;">Obtiens ta clé sur <strong style="color:var(--violet-soft);">console.groq.com</strong> — c'est gratuit</p>
+        <div class="card-title">Conseiller IA</div>
+        <div id="ai-key-status" style="font-size:13px;color:var(--text-2);display:flex;align-items:center;gap:8px;"></div>
       </div>
 
       <!-- Ce que l'IA peut faire -->
@@ -730,6 +923,25 @@ textarea { resize: none; min-height: 80px; }
         <button class="btn btn-primary" onclick="saveProfile()">Enregistrer le profil</button>
       </div>
 
+      <!-- Custom Categories -->
+      <div class="card">
+        <div class="card-title">Mes catégories</div>
+        <div class="tabs" style="margin-bottom:12px;">
+          <button class="tab active" id="cat-tab-expense" onclick="switchCatTab('expense')">Dépenses</button>
+          <button class="tab" id="cat-tab-income" onclick="switchCatTab('income')">Revenus</button>
+        </div>
+        <div id="cat-list" style="margin-bottom:12px;"></div>
+        <div class="row">
+          <div class="form-group" style="flex:0 0 60px;">
+            <input type="text" id="new-cat-emoji" placeholder="📌" maxlength="4" style="text-align:center;">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <input type="text" id="new-cat-name" placeholder="Nom de la catégorie" maxlength="24">
+          </div>
+        </div>
+        <button class="btn btn-ghost" onclick="addCustomCategory()">+ Ajouter la catégorie</button>
+      </div>
+
       <!-- Danger zone -->
       <div class="card" style="margin-top:12px;">
         <div class="card-title" style="color:var(--red);">Zone dangereuse</div>
@@ -840,6 +1052,7 @@ textarea { resize: none; min-height: 80px; }
   </div>
 
 </div><!-- /app -->
+</div><!-- /dashboard-shell -->
 
 <!-- ═══════════════════ BOTTOM NAV ═══════════════════ -->
 <nav id="bottom-nav">
@@ -878,21 +1091,15 @@ textarea { resize: none; min-height: 80px; }
     <div class="drawer-title">💰 Ajouter un revenu</div>
     <div class="form-group">
       <label>Montant</label>
-      <div class="input-prefix"><span id="in-currency-prefix">FCFA</span><input type="number" id="in-amount" placeholder="0" min="0"></div>
+      <div class="input-prefix"><span id="in-currency-prefix">FCFA</span><input type="number" id="in-amount" placeholder="0" min="0" oninput="syncDHInput('in')"></div>
+      <div class="dh-input-row" id="in-dh-row" style="display:none;margin-top:8px;">
+        <div class="input-prefix"><span>DH</span><input type="number" id="in-amount-dh" placeholder="0" min="0" oninput="syncFromDH('in')"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">ou saisir en Dollar Haïtien (1 DH = 5 HTG)</div>
+      </div>
     </div>
     <div class="form-group">
       <label>Source</label>
-      <select id="in-source">
-        <option value="Salaire">💼 Salaire</option>
-        <option value="Freelance">🚀 Freelance / Client</option>
-        <option value="Parents">👨‍👩‍👦 Parents / famille</option>
-        <option value="Bourse">🎓 Bourse / aide</option>
-        <option value="Vente">🛒 Vente</option>
-        <option value="Remboursement">↩️ Remboursement reçu</option>
-        <option value="Emprunt reçu">🤝 Emprunt reçu</option>
-        <option value="Carte en ligne">💳 Solde carte en ligne</option>
-        <option value="Autre">📌 Autre</option>
-      </select>
+      <select id="in-source"></select>
     </div>
     <div class="form-group">
       <label>📝 Pourquoi / Note (important pour l'IA)</label>
@@ -912,27 +1119,15 @@ textarea { resize: none; min-height: 80px; }
     <div class="drawer-title">💸 Ajouter une dépense</div>
     <div class="form-group">
       <label>Montant</label>
-      <div class="input-prefix"><span id="ex-currency-prefix">FCFA</span><input type="number" id="ex-amount" placeholder="0" min="0"></div>
+      <div class="input-prefix"><span id="ex-currency-prefix">FCFA</span><input type="number" id="ex-amount" placeholder="0" min="0" oninput="syncDHInput('ex')"></div>
+      <div class="dh-input-row" id="ex-dh-row" style="display:none;margin-top:8px;">
+        <div class="input-prefix"><span>DH</span><input type="number" id="ex-amount-dh" placeholder="0" min="0" oninput="syncFromDH('ex')"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">ou saisir en Dollar Haïtien (1 DH = 5 HTG)</div>
+      </div>
     </div>
     <div class="form-group">
       <label>Catégorie</label>
-      <select id="ex-cat">
-        <option value="Alimentation">🍔 Alimentation</option>
-        <option value="Transport">🚌 Transport / carburant</option>
-        <option value="Logement">🏠 Logement / loyer</option>
-        <option value="Santé">💊 Santé / pharmacie</option>
-        <option value="Internet">🌐 Internet / WiFi</option>
-        <option value="Téléphone">📞 Téléphone / crédit</option>
-        <option value="Électricité">⚡ Électricité / eau</option>
-        <option value="Shopping">🛍️ Shopping / vêtements</option>
-        <option value="Loisirs">🎮 Loisirs / sorties</option>
-        <option value="Streaming">🎬 Streaming / abonnements</option>
-        <option value="Carte en ligne">💳 Carte / solde en ligne</option>
-        <option value="Éducation">📚 Éducation / fournitures</option>
-        <option value="Épargne">💎 Épargne / investissement</option>
-        <option value="Remboursement dette">🔴 Remboursement dette</option>
-        <option value="Autre">📌 Autre</option>
-      </select>
+      <select id="ex-cat"></select>
     </div>
     <div class="form-group">
       <label>📝 Pourquoi cette dépense ? (l'IA s'en souviendra)</label>
@@ -953,25 +1148,15 @@ textarea { resize: none; min-height: 80px; }
     <div class="drawer-title">🎯 Créer un budget</div>
     <div class="form-group">
       <label>Catégorie</label>
-      <select id="bud-cat">
-        <option value="Alimentation">🍔 Alimentation</option>
-        <option value="Transport">🚌 Transport</option>
-        <option value="Logement">🏠 Logement</option>
-        <option value="Santé">💊 Santé</option>
-        <option value="Internet">🌐 Internet / WiFi</option>
-        <option value="Téléphone">📞 Téléphone</option>
-        <option value="Électricité">⚡ Électricité / eau</option>
-        <option value="Shopping">🛍️ Shopping</option>
-        <option value="Loisirs">🎮 Loisirs</option>
-        <option value="Streaming">🎬 Streaming</option>
-        <option value="Carte en ligne">💳 Carte en ligne</option>
-        <option value="Éducation">📚 Éducation</option>
-        <option value="Autre">📌 Autre</option>
-      </select>
+      <select id="bud-cat"></select>
     </div>
     <div class="form-group">
       <label>Limite mensuelle</label>
-      <div class="input-prefix"><span id="bud-currency-prefix">FCFA</span><input type="number" id="bud-limit" placeholder="0" min="0"></div>
+      <div class="input-prefix"><span id="bud-currency-prefix">FCFA</span><input type="number" id="bud-limit" placeholder="0" min="0" oninput="syncDHInput('bud-limit')"></div>
+      <div class="dh-input-row" id="bud-dh-row" style="display:none;margin-top:8px;">
+        <div class="input-prefix"><span>DH</span><input type="number" id="bud-limit-dh" placeholder="0" min="0" oninput="syncFromDH('bud-limit')"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">ou saisir en Dollar Haïtien (1 DH = 5 HTG)</div>
+      </div>
     </div>
     <button class="btn btn-primary" onclick="addBudget()">Créer le budget</button>
   </div>
@@ -985,7 +1170,11 @@ textarea { resize: none; min-height: 80px; }
     <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6;">Définis le montant que tu avais déjà avant de commencer à tracker. Ce solde sera ajouté à ton solde total comme base de départ.</p>
     <div class="form-group">
       <label>Montant de départ</label>
-      <div class="input-prefix"><span id="init-currency-prefix">HTG</span><input type="number" id="init-amount" placeholder="0" min="0"></div>
+      <div class="input-prefix"><span id="init-currency-prefix">HTG</span><input type="number" id="init-amount" placeholder="0" min="0" oninput="syncDHInput('init')"></div>
+      <div class="dh-input-row" id="init-dh-row" style="display:none;margin-top:8px;">
+        <div class="input-prefix"><span>DH</span><input type="number" id="init-amount-dh" placeholder="0" min="0" oninput="syncFromDH('init')"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">ou saisir en Dollar Haïtien (1 DH = 5 HTG)</div>
+      </div>
     </div>
     <div class="form-group">
       <label>Note (optionnel)</label>
@@ -1010,7 +1199,11 @@ textarea { resize: none; min-height: 80px; }
     </div>
     <div class="form-group">
       <label>Montant</label>
-      <div class="input-prefix"><span id="debt-currency-prefix">HTG</span><input type="number" id="debt-amount" placeholder="0" min="0"></div>
+      <div class="input-prefix"><span id="debt-currency-prefix">HTG</span><input type="number" id="debt-amount" placeholder="0" min="0" oninput="syncDHInput('debt')"></div>
+      <div class="dh-input-row" id="debt-dh-row" style="display:none;margin-top:8px;">
+        <div class="input-prefix"><span>DH</span><input type="number" id="debt-amount-dh" placeholder="0" min="0" oninput="syncFromDH('debt')"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">ou saisir en Dollar Haïtien (1 DH = 5 HTG)</div>
+      </div>
     </div>
     <div class="form-group">
       <label>Avec qui ?</label>
@@ -1063,11 +1256,19 @@ textarea { resize: none; min-height: 80px; }
     </div>
     <div class="form-group">
       <label>Montant cible</label>
-      <div class="input-prefix"><span id="goal-currency-prefix">HTG</span><input type="number" id="goal-target" placeholder="0" min="1"></div>
+      <div class="input-prefix"><span id="goal-currency-prefix">HTG</span><input type="number" id="goal-target" placeholder="0" min="1" oninput="syncDHInput('goal-target')"></div>
+      <div class="dh-input-row" id="goal-target-dh-row" style="display:none;margin-top:8px;">
+        <div class="input-prefix"><span>DH</span><input type="number" id="goal-target-dh" placeholder="0" min="0" oninput="syncFromDH('goal-target')"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">ou saisir en Dollar Haïtien (1 DH = 5 HTG)</div>
+      </div>
     </div>
     <div class="form-group">
       <label>Épargne déjà accumulée (optionnel)</label>
-      <div class="input-prefix"><span id="goal-saved-prefix">HTG</span><input type="number" id="goal-initial-saved" placeholder="0" min="0"></div>
+      <div class="input-prefix"><span id="goal-saved-prefix">HTG</span><input type="number" id="goal-initial-saved" placeholder="0" min="0" oninput="syncDHInput('goal-initial-saved')"></div>
+      <div class="dh-input-row" id="goal-initial-saved-dh-row" style="display:none;margin-top:8px;">
+        <div class="input-prefix"><span>DH</span><input type="number" id="goal-initial-saved-dh" placeholder="0" min="0" oninput="syncFromDH('goal-initial-saved')"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">ou saisir en Dollar Haïtien (1 DH = 5 HTG)</div>
+      </div>
     </div>
     <div class="form-group">
       <label>Date limite (optionnel)</label>
@@ -1086,7 +1287,11 @@ textarea { resize: none; min-height: 80px; }
     <p id="deposit-goal-name" style="font-size:14px;color:var(--text-2);margin-bottom:16px;"></p>
     <div class="form-group">
       <label>Montant à ajouter</label>
-      <div class="input-prefix"><span id="deposit-currency-prefix">HTG</span><input type="number" id="deposit-amount" placeholder="0" min="1"></div>
+      <div class="input-prefix"><span id="deposit-currency-prefix">HTG</span><input type="number" id="deposit-amount" placeholder="0" min="1" oninput="syncDHInput('deposit')"></div>
+      <div class="dh-input-row" id="deposit-dh-row" style="display:none;margin-top:8px;">
+        <div class="input-prefix"><span>DH</span><input type="number" id="deposit-amount-dh" placeholder="0" min="0" oninput="syncFromDH('deposit')"></div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:4px;">ou saisir en Dollar Haïtien (1 DH = 5 HTG)</div>
+      </div>
     </div>
     <button class="btn btn-primary" onclick="depositToGoal()">Ajouter</button>
   </div>
@@ -1097,12 +1302,36 @@ textarea { resize: none; min-height: 80px; }
 
 <script>
 // ═══════════════════════════════════════════════════════════════
+//  ⚙️ CONFIG — Remplace la ligne ci-dessous par ta propre clé Groq
+//  Obtiens une clé gratuite sur https://console.groq.com
+// ═══════════════════════════════════════════════════════════════
+const GROQ_API_KEY = "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";
+
+// ═══════════════════════════════════════════════════════════════
 //  DATA LAYER — localStorage persistence
 // ═══════════════════════════════════════════════════════════════
 const DB = {
   get: (k, def) => { try { const v = localStorage.getItem('wallet_' + k); return v ? JSON.parse(v) : def; } catch { return def; } },
   set: (k, v) => { try { localStorage.setItem('wallet_' + k, JSON.stringify(v)); } catch {} },
 };
+
+const DEFAULT_EXPENSE_CATS = [
+  { name: 'Alimentation', emoji: '🍔' }, { name: 'Transport', emoji: '🚌' },
+  { name: 'Logement', emoji: '🏠' }, { name: 'Santé', emoji: '💊' },
+  { name: 'Internet', emoji: '🌐' }, { name: 'Téléphone', emoji: '📞' },
+  { name: 'Électricité', emoji: '⚡' }, { name: 'Shopping', emoji: '🛍️' },
+  { name: 'Loisirs', emoji: '🎮' }, { name: 'Streaming', emoji: '🎬' },
+  { name: 'Carte en ligne', emoji: '💳' }, { name: 'Éducation', emoji: '📚' },
+  { name: 'Épargne', emoji: '💎' }, { name: 'Remboursement dette', emoji: '🔴' },
+  { name: 'Autre', emoji: '📌' },
+];
+const DEFAULT_INCOME_CATS = [
+  { name: 'Salaire', emoji: '💼' }, { name: 'Freelance', emoji: '🚀' },
+  { name: 'Parents', emoji: '👨‍👩‍👦' }, { name: 'Bourse', emoji: '🎓' },
+  { name: 'Vente', emoji: '🛒' }, { name: 'Remboursement', emoji: '↩️' },
+  { name: 'Emprunt reçu', emoji: '🤝' }, { name: 'Carte en ligne', emoji: '💳' },
+  { name: 'Autre', emoji: '📌' },
+];
 
 let data = {
   profile: DB.get('profile', { name: '', type: '', currency: 'HTG', savingsGoal: 20, showDH: false }),
@@ -1111,7 +1340,8 @@ let data = {
   debts: DB.get('debts', []),
   goals: DB.get('goals', []),
   initialBalance: DB.get('initialBalance', 0),
-  groqKey: DB.get('groqKey', ''),
+  expenseCats: DB.get('expenseCats', DEFAULT_EXPENSE_CATS),
+  incomeCats: DB.get('incomeCats', DEFAULT_INCOME_CATS),
 };
 
 const save = () => {
@@ -1121,7 +1351,8 @@ const save = () => {
   DB.set('debts', data.debts);
   DB.set('goals', data.goals);
   DB.set('initialBalance', data.initialBalance);
-  DB.set('groqKey', data.groqKey);
+  DB.set('expenseCats', data.expenseCats);
+  DB.set('incomeCats', data.incomeCats);
 };
 
 // ═══════════════════════════════════════════════════════════════
@@ -1137,6 +1368,9 @@ function navigate(page) {
   document.getElementById('page-' + page).classList.add('active');
   const navEl = document.getElementById('nav-' + page);
   if (navEl) navEl.classList.add('active');
+  document.querySelectorAll('.nav-item-d').forEach(n => n.classList.remove('active'));
+  const navDEl = document.getElementById('nav-d-' + page);
+  if (navDEl) navDEl.classList.add('active');
   currentPage = page;
   document.getElementById('app').scrollTo(0, 0);
   if (page === 'home') renderHome();
@@ -1161,6 +1395,10 @@ function openDrawer(id) {
   // update currency prefixes
   const cur = data.profile.currency || 'HTG';
   document.querySelectorAll('[id$="-currency-prefix"]').forEach(el => el.textContent = cur);
+  // populate category selects each time drawer opens (categories may have changed)
+  populateCategorySelects();
+  // show/hide DH quick-entry rows
+  updateDHRowsVisibility();
 }
 
 function closeDrawer(id) {
@@ -1169,6 +1407,98 @@ function closeDrawer(id) {
 
 function closeOnOverlay(e, id) {
   if (e.target.classList.contains('overlay')) document.getElementById(id).classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DOLLAR HAÏTIEN (DH) QUICK-ENTRY ON AMOUNT FIELDS
+// ═══════════════════════════════════════════════════════════════
+// Maps a logical field prefix to its main amount input id and DH input id
+function dhFieldIds(prefix) {
+  return { main: prefix + (prefix.includes('-') ? '' : '-amount'), dh: prefix + (prefix.includes('-') ? '' : '-amount') + '-dh' };
+}
+// Simpler explicit mapping used by inline handlers: prefix already matches input id base
+function updateDHRowsVisibility() {
+  const show = data.profile.currency === 'HTG' && data.profile.showDH;
+  document.querySelectorAll('.dh-input-row').forEach(el => { el.style.display = show ? 'block' : 'none'; });
+}
+function syncDHInput(baseId) {
+  const mainEl = document.getElementById(baseId + '-amount') || document.getElementById(baseId);
+  const dhEl = document.getElementById(baseId + '-amount-dh') || document.getElementById(baseId + '-dh');
+  if (!mainEl || !dhEl) return;
+  const val = parseFloat(mainEl.value);
+  if (!isNaN(val)) dhEl.value = fmtConv(val / 5, 'DH');
+  else dhEl.value = '';
+}
+function syncFromDH(baseId) {
+  const mainEl = document.getElementById(baseId + '-amount') || document.getElementById(baseId);
+  const dhEl = document.getElementById(baseId + '-amount-dh') || document.getElementById(baseId + '-dh');
+  if (!mainEl || !dhEl) return;
+  const val = parseFloat(dhEl.value);
+  if (!isNaN(val)) mainEl.value = Math.round(val * 5 * 100) / 100;
+  else mainEl.value = '';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  CUSTOM CATEGORIES
+// ═══════════════════════════════════════════════════════════════
+let currentCatTab = 'expense';
+
+function switchCatTab(type) {
+  currentCatTab = type;
+  document.getElementById('cat-tab-expense').classList.toggle('active', type === 'expense');
+  document.getElementById('cat-tab-income').classList.toggle('active', type === 'income');
+  renderCatList();
+}
+
+function renderCatList() {
+  const el = document.getElementById('cat-list');
+  if (!el) return;
+  const list = currentCatTab === 'expense' ? data.expenseCats : data.incomeCats;
+  el.innerHTML = list.map((c, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:18px;">${c.emoji}</span>
+      <span style="flex:1;font-size:13px;">${c.name}</span>
+      <button onclick="deleteCustomCategory(${i})" style="font-size:11px;color:var(--red);background:none;border:none;cursor:pointer;">supprimer</button>
+    </div>
+  `).join('') || '<div style="font-size:12px;color:var(--text-3);text-align:center;padding:8px 0;">Aucune catégorie</div>';
+}
+
+function addCustomCategory() {
+  const emoji = document.getElementById('new-cat-emoji').value.trim() || '📌';
+  const name = document.getElementById('new-cat-name').value.trim();
+  if (!name) { showToast('Donne un nom à la catégorie', 'error'); return; }
+  const list = currentCatTab === 'expense' ? data.expenseCats : data.incomeCats;
+  if (list.find(c => c.name.toLowerCase() === name.toLowerCase())) { showToast('Catégorie déjà existante', 'error'); return; }
+  list.push({ name, emoji });
+  save();
+  document.getElementById('new-cat-emoji').value = '';
+  document.getElementById('new-cat-name').value = '';
+  renderCatList();
+  showToast('✅ Catégorie ajoutée !', 'success');
+}
+
+function deleteCustomCategory(index) {
+  const list = currentCatTab === 'expense' ? data.expenseCats : data.incomeCats;
+  if (list.length <= 1) { showToast('Il faut garder au moins une catégorie', 'error'); return; }
+  list.splice(index, 1);
+  save();
+  renderCatList();
+  showToast('Catégorie supprimée', 'success');
+}
+
+function populateCategorySelects() {
+  const exSel = document.getElementById('ex-cat');
+  const budSel = document.getElementById('bud-cat');
+  const inSel = document.getElementById('in-source');
+  if (exSel) exSel.innerHTML = data.expenseCats.map(c => `<option value="${c.name}">${c.emoji} ${c.name}</option>`).join('');
+  if (budSel) budSel.innerHTML = data.expenseCats.map(c => `<option value="${c.name}">${c.emoji} ${c.name}</option>`).join('');
+  if (inSel) inSel.innerHTML = data.incomeCats.map(c => `<option value="${c.name}">${c.emoji} ${c.name}</option>`).join('');
+}
+
+function catIcon(name) {
+  const all = [...data.expenseCats, ...data.incomeCats];
+  const found = all.find(c => c.name === name);
+  return found ? found.emoji : (CAT_ICONS[name] || '📌');
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1196,6 +1526,8 @@ function addTransaction(type) {
   save();
 
   amountEl.value = '';
+  const dhEl = document.getElementById(isIncome ? 'in-amount-dh' : 'ex-amount-dh');
+  if (dhEl) dhEl.value = '';
   document.getElementById(isIncome ? 'in-note' : 'ex-note').value = '';
   closeDrawer(isIncome ? 'drawer-income' : 'drawer-expense');
   showToast(isIncome ? '✅ Revenu ajouté !' : '✅ Dépense enregistrée !', 'success');
@@ -1226,12 +1558,14 @@ function txHTML(tx, showDelete = true) {
   const sign = tx.type === 'income' ? '+' : '-';
   const col = tx.type === 'income' ? 'var(--green)' : 'var(--red)';
   const date = new Date(tx.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
-  const icon = CAT_ICONS[tx.category] || '📌';
+  const icon = catIconVisual(tx.category);
   const iconBg = tx.type === 'income' ? 'var(--green-dim)' : 'var(--red-dim)';
+  const iconColor = tx.type === 'income' ? 'var(--green)' : 'var(--red)';
   return `<div class="tx-item">
-    <div class="tx-icon" style="background:${iconBg};">${icon}</div>
+    <div class="tx-icon" style="background:${iconBg};color:${iconColor};">${icon}</div>
     <div class="tx-info">
-      <div class="tx-name">${tx.category}${tx.note ? ' · ' + tx.note : ''}</div>
+      <div class="tx-name">${tx.note || tx.category}</div>
+      <span class="tx-cat-badge">${tx.category}</span>
       <div class="tx-date">${date}</div>
     </div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
@@ -1257,6 +1591,8 @@ function addBudget() {
   }
   save();
   document.getElementById('bud-limit').value = '';
+  const dhEl = document.getElementById('bud-limit-dh');
+  if (dhEl) dhEl.value = '';
   closeDrawer('drawer-budget');
   if (currentPage === 'budgets') renderBudgets();
   if (currentPage === 'home') renderHome();
@@ -1277,22 +1613,61 @@ function getBudgetSpent(cat) {
     .reduce((s, t) => s + t.amount, 0);
 }
 
+// Professional SVG icon lookup for common category names (falls back to the
+// category's own emoji when no match exists — purely presentational, does
+// not alter category data or any calculation).
+const CAT_ICON_SVG = {
+  'Alimentation': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+  'Transport': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="6" rx="2"/><path d="M5 11l1.5-5h11L19 11"/><circle cx="7.5" cy="18.5" r="1.5"/><circle cx="16.5" cy="18.5" r="1.5"/></svg>',
+  'Logement': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+  'Santé': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',
+  'Internet': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>',
+  'Téléphone': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.32 1.85.55 2.81.68A2 2 0 0 1 22 16.92z"/></svg>',
+  'Électricité': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  'Shopping': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>',
+  'Loisirs': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="8" cy="12" r="2"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="18" y1="12" x2="18" y2="12"/></svg>',
+  'Streaming': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>',
+  'Carte en ligne': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+  'Éducation': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>',
+  'Épargne': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5-1.5-3-2-5-2-4 0-8 3-8 8 0 1 0 2 .5 3L4 17l1 3 3-1 1.5 1.5c1 .5 2 .5 3 .5 5 0 8-4 8-8 0-2-1-4-1.5-5"/><circle cx="15" cy="9" r="1"/></svg>',
+  'Remboursement dette': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+  'Salaire': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  'Freelance': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/></svg>',
+  'Parents': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  'Bourse': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1.5 2.5 3 6 3s6-1.5 6-3v-5"/></svg>',
+  'Vente': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+  'Remboursement': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>',
+  'Emprunt reçu': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg>',
+  'Autre': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',
+};
+function catIconVisual(name) {
+  return CAT_ICON_SVG[name] ? `<span class="icon" style="width:18px;height:18px;">${CAT_ICON_SVG[name]}</span>` : catIcon(name);
+}
+
 function budgetBarHTML(b) {
   const spent = getBudgetSpent(b.category);
   const pct = Math.min(100, Math.round((spent / b.limit) * 100));
   const over = spent > b.limit;
-  const barCol = over ? 'var(--red)' : pct > 75 ? 'var(--amber)' : 'var(--green)';
+  const level = over ? 'danger' : pct > 60 ? 'warn' : '';
+  const remaining = Math.max(0, b.limit - spent);
   const cur = data.profile.currency || 'FCFA';
-  const icon = CAT_ICONS[b.category] || '📌';
-  return `<div class="budget-item">
-    <div class="budget-header">
-      <div class="budget-name">${icon} ${b.category}</div>
-      <div class="budget-amounts" style="color:${over ? 'var(--red)' : 'var(--text-3)'};">
-        ${fmtNum(spent)} / ${fmtNum(b.limit)} ${cur}
-      </div>
+  const icon = catIconVisual(b.category);
+  const statusIcon = over
+    ? '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>'
+    : '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  return `<div class="budget-item-pro">
+    <div class="budget-pro-head">
+      <div class="budget-pro-name">${icon} ${b.category}</div>
+      <div class="budget-pro-amounts"><b>${fmtNum(spent)}</b> / ${fmtNum(b.limit)} ${cur}</div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${barCol};"></div></div>
-    <div style="font-size:11px;color:${barCol};margin-top:4px;">${over ? '⚠️ Budget dépassé' : pct + '% utilisé'}</div>
+    <div class="budget-pro-bar-row">
+      <div class="budget-pro-track"><div class="budget-pro-fill ${level}" style="width:${pct}%;"></div></div>
+      <div class="budget-pro-pct ${level}">${pct}%</div>
+    </div>
+    <div class="budget-pro-status" style="color:${over ? 'var(--red)' : pct > 60 ? 'var(--amber)' : 'var(--text-3)'};">
+      <span class="icon" style="width:12px;height:12px;">${statusIcon}</span>
+      ${over ? 'Budget dépassé' : `${fmtNum(remaining)} ${cur} restant`}
+    </div>
   </div>`;
 }
 
@@ -1311,18 +1686,26 @@ function getMonthStats(monthOffset = 0) {
   return { income, expenses, balance: income - expenses, txs };
 }
 
+const HEALTH_ICONS = {
+  excellent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+  bon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/></svg>',
+  moyen: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  surveiller: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',
+  critique: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+};
+
 function calcHealth() {
   const { income, expenses } = getMonthStats();
-  if (income === 0 && expenses === 0) return { score: null, title: 'Pas encore de données', desc: 'Commence à enregistrer tes revenus et dépenses.', color: 'var(--text-3)' };
+  if (income === 0 && expenses === 0) return { score: null, title: 'Pas encore de données', desc: 'Commence à enregistrer tes revenus et dépenses.', color: 'var(--text-3)', state: 'moyen', stateLabel: 'À configurer' };
   const ratio = income > 0 ? expenses / income : 1;
   const savPct = income > 0 ? ((income - expenses) / income) * 100 : 0;
-  let score, title, desc, color;
-  if (ratio <= 0.5) { score = 95; title = '🔥 Excellent !'; desc = `Tu économises ${Math.round(savPct)}% de tes revenus. Tu gères super bien ton argent !`; color = 'var(--green)'; }
-  else if (ratio <= 0.7) { score = 78; title = '👍 Très bien'; desc = `Bonne maîtrise avec ${Math.round(savPct)}% d'épargne. Continue comme ça !`; color = 'var(--green)'; }
-  else if (ratio <= 0.85) { score = 60; title = '⚠️ Attention'; desc = `Tes dépenses représentent ${Math.round(ratio * 100)}% de tes revenus. Essaie de réduire.`; color = 'var(--amber)'; }
-  else if (ratio <= 1) { score = 35; title = '😬 Limite'; desc = `Il te reste très peu. Identifie les dépenses à couper en priorité.`; color = 'var(--red)'; }
-  else { score = 10; title = '🚨 Déficit !'; desc = `Tu dépenses plus que tu gagnes (${Math.round((ratio - 1) * 100)}% de plus). C'est urgent à corriger.`; color = 'var(--red)'; }
-  return { score, title, desc, color };
+  let score, title, desc, color, state, stateLabel;
+  if (ratio <= 0.5) { score = 95; title = 'Excellent !'; desc = `Tu économises ${Math.round(savPct)}% de tes revenus. Tu gères super bien ton argent !`; color = 'var(--green)'; state = 'excellent'; stateLabel = 'Excellent'; }
+  else if (ratio <= 0.7) { score = 78; title = 'Très bien'; desc = `Bonne maîtrise avec ${Math.round(savPct)}% d'épargne. Continue comme ça !`; color = 'var(--green)'; state = 'bon'; stateLabel = 'Bon'; }
+  else if (ratio <= 0.85) { score = 60; title = 'Attention'; desc = `Tes dépenses représentent ${Math.round(ratio * 100)}% de tes revenus. Essaie de réduire.`; color = 'var(--amber)'; state = 'moyen'; stateLabel = 'Moyen'; }
+  else if (ratio <= 1) { score = 35; title = 'Limite'; desc = `Il te reste très peu. Identifie les dépenses à couper en priorité.`; color = 'var(--red)'; state = 'surveiller'; stateLabel = 'À surveiller'; }
+  else { score = 10; title = 'Déficit !'; desc = `Tu dépenses plus que tu gagnes (${Math.round((ratio - 1) * 100)}% de plus). C'est urgent à corriger.`; color = 'var(--red)'; state = 'critique'; stateLabel = 'Critique'; }
+  return { score, title, desc, color, state, stateLabel };
 }
 
 function renderHome() {
@@ -1351,7 +1734,7 @@ function renderHome() {
   document.getElementById('display-name').textContent = data.profile.name || 'Mon Wallet';
   const initLabel = document.getElementById('hero-label-text');
   if (data.initialBalance > 0) {
-    initLabel.innerHTML = `Solde disponible <span style="font-size:10px;color:var(--violet-soft);margin-left:4px;">+ ${fmtNum(data.initialBalance)} départ</span>`;
+    initLabel.innerHTML = `Solde disponible <span style="font-size:10px;color:#C4B5FD;margin-left:4px;">+ ${fmtNum(data.initialBalance)} départ</span>`;
   } else {
     initLabel.textContent = 'Solde disponible';
   }
@@ -1376,6 +1759,13 @@ function renderHome() {
   }
   document.getElementById('health-title').textContent = h.title;
   document.getElementById('health-desc').textContent = h.desc;
+  const hBadge = document.getElementById('health-badge');
+  if (hBadge) {
+    hBadge.style.display = 'inline-flex';
+    hBadge.style.background = h.state === 'excellent' || h.state === 'bon' ? 'var(--green-dim)' : h.state === 'moyen' ? 'var(--amber-dim)' : h.state === 'critique' || h.state === 'surveiller' ? 'var(--red-dim)' : 'var(--surface2)';
+    hBadge.style.color = h.color;
+    hBadge.innerHTML = `<span class="icon" style="width:12px;height:12px;">${HEALTH_ICONS[h.state] || ''}</span>${h.stateLabel || ''}`;
+  }
 
   // Health detail cards
   const detailGrid = document.getElementById('health-details');
@@ -1419,6 +1809,10 @@ function renderHome() {
   // Budgets preview
   const budPreview = document.getElementById('budget-preview');
   budPreview.innerHTML = data.budgets.length ? data.budgets.slice(0, 3).map(budgetBarHTML).join('') : '<div style="color:var(--text-3);font-size:13px;text-align:center;padding:12px 0;">Aucun budget configuré</div>';
+
+  // Debt due-date reminder popups
+  renderDebtReminders();
+  applyBalanceVisibility();
 }
 
 function renderTransactions() {
@@ -1491,6 +1885,8 @@ function renderProfile() {
   // Avatar emoji by type
   const avatars = { salarie: '💼', freelance: '🚀', etudiant: '🎓', parents: '👨‍👩‍👦', sans_revenu: '⏳', retraite: '🧘' };
   document.getElementById('profile-avatar').textContent = avatars[p.type] || '👤';
+
+  renderCatList();
 }
 
 function onCurrencyChange(silent) {
@@ -1542,11 +1938,34 @@ function saveProfile() {
 function confirmReset() {
   if (confirm('⚠️ Tout effacer ? Cette action est irréversible.')) {
     localStorage.clear();
-    data = { profile: { name: '', type: '', currency: 'HTG', savingsGoal: 20, showDH: false }, transactions: [], budgets: [], debts: [], goals: [], initialBalance: 0, groqKey: '' };
+    data = { profile: { name: '', type: '', currency: 'HTG', savingsGoal: 20, showDH: false }, transactions: [], budgets: [], debts: [], goals: [], initialBalance: 0, expenseCats: DEFAULT_EXPENSE_CATS.slice(), incomeCats: DEFAULT_INCOME_CATS.slice() };
     showToast('Données réinitialisées', 'error');
     renderHome();
     renderProfile();
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BALANCE VISIBILITY TOGGLE (UI feature — does not touch stored data)
+// ═══════════════════════════════════════════════════════════════
+let balanceHidden = DB.get('balanceHidden', false);
+function applyBalanceVisibility() {
+  const wrap = document.getElementById('hero-amount-wrap');
+  const dhLine = document.getElementById('dh-convert-line');
+  const eyeIcon = document.getElementById('eye-icon');
+  if (!wrap) return;
+  wrap.classList.toggle('balance-blur', balanceHidden);
+  if (dhLine) dhLine.classList.toggle('balance-blur', balanceHidden);
+  if (eyeIcon) {
+    eyeIcon.innerHTML = balanceHidden
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a18.6 18.6 0 0 1 5.06-5.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  }
+}
+function toggleBalanceVisibility() {
+  balanceHidden = !balanceHidden;
+  DB.set('balanceHidden', balanceHidden);
+  applyBalanceVisibility();
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1562,21 +1981,19 @@ const QUICK_PROMPTS = [
 
 let aiHistory = [];
 
-function renderAIPage() {
-  const key = data.groqKey;
-  document.getElementById('groq-key').value = key ? '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' : '';
-  const chipsEl = document.getElementById('ai-chips');
-  chipsEl.innerHTML = QUICK_PROMPTS.map(p => `<div class="chip" onclick="quickPrompt('${p}')">${p}</div>`).join('');
+function hasValidApiKey() {
+  return GROQ_API_KEY && GROQ_API_KEY !== 'COLLE_TA_CLE_GROQ_ICI' && GROQ_API_KEY.trim().length > 0;
 }
 
-function saveApiKey() {
-  const val = document.getElementById('groq-key').value.trim();
-  if (!val || val.startsWith('•')) { showToast('Colle ta vraie clé API', 'error'); return; }
-  data.groqKey = val;
-  save();
-  document.getElementById('groq-key').value = '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';
-  showToast('✅ Clé API sauvegardée !', 'success');
-  appendAIMsg('assistant', '✅ Clé API enregistrée ! Je suis prêt à analyser tes finances. Pose-moi une question ou clique sur une suggestion !');
+function renderAIPage() {
+  const statusEl = document.getElementById('ai-key-status');
+  if (hasValidApiKey()) {
+    statusEl.innerHTML = '<span style="color:var(--green);">●</span> IA connectée et prête à analyser tes finances';
+  } else {
+    statusEl.innerHTML = '<span style="color:var(--red);">●</span> Clé API non configurée — contacte l\'administrateur du site';
+  }
+  const chipsEl = document.getElementById('ai-chips');
+  chipsEl.innerHTML = QUICK_PROMPTS.map(p => `<div class="chip" onclick="quickPrompt('${p}')">${p}</div>`).join('');
 }
 
 function quickPrompt(text) {
@@ -1671,7 +2088,7 @@ ${goalsDetail}
 ═══ BUDGETS ═══
 ${budgetsDetail}
 
-L'utilisateur peut te demander de créer des objectifs, analyser ses dépenses, calculer des délais, ou tout autre conseil financier. Sois précis et utilise les chiffres réels ci-dessus dans ta réponse.`;
+L'utilisateur peut te demander de créer des objectifs, analyser ses dépenses, calculer des délais, ou tout autre conseil financier. Sois précis et utilise les chiffres réels ci-dessus dans ta réponse. Quand tu utilises un outil pour créer une transaction, un objectif, un budget, ou une dette, confirme clairement ce qui a été créé.`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1688,7 +2105,7 @@ const AI_TOOLS = [
         properties: {
           type: { type: 'string', enum: ['income', 'expense'], description: 'Type: income (revenu) ou expense (dépense)' },
           amount: { type: 'number', description: 'Montant en chiffres' },
-          category: { type: 'string', description: 'Catégorie. Revenus: Salaire, Freelance, Parents, Bourse, Vente, Remboursement, Emprunt reçu, Autre. Dépenses: Alimentation, Transport, Logement, Santé, Internet, Téléphone, Électricité, Shopping, Loisirs, Streaming, Carte en ligne, Éducation, Épargne, Remboursement dette, Autre' },
+          category: { type: 'string', description: 'Catégorie (utiliser une catégorie existante de l\'utilisateur si possible)' },
           note: { type: 'string', description: 'Note ou raison de la transaction' },
           date: { type: 'string', description: 'Date au format YYYY-MM-DD, laisser vide pour aujourd\'hui' },
         },
@@ -1722,7 +2139,7 @@ const AI_TOOLS = [
       parameters: {
         type: 'object',
         properties: {
-          category: { type: 'string', description: 'Catégorie: Alimentation, Transport, Logement, Santé, Internet, Téléphone, Électricité, Shopping, Loisirs, Streaming, Éducation, Autre' },
+          category: { type: 'string', description: 'Catégorie de dépense' },
           limit: { type: 'number', description: 'Limite mensuelle en chiffres' },
         },
         required: ['category', 'limit'],
@@ -1883,7 +2300,7 @@ async function sendAI() {
   const input = document.getElementById('ai-input');
   const msg = input.value.trim();
   if (!msg) return;
-  if (!data.groqKey) { showToast('⚠️ Ajoute ta clé Groq API d\'abord', 'error'); return; }
+  if (!hasValidApiKey()) { showToast('⚠️ IA non configurée sur ce site', 'error'); return; }
 
   input.value = '';
   appendAIMsg('user', msg);
@@ -1898,7 +2315,7 @@ async function sendAI() {
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.groqKey },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages: [
@@ -1939,13 +2356,13 @@ async function sendAI() {
         toolResults.push({ role: 'tool', tool_call_id: tc.id, content: result });
       }
 
-      // Follow-up call so IA confirms what it did
+      // Follow-up call so IA confirms what il a fait
       aiHistory.push({ role: 'assistant', content: assistantMsg.content || '', tool_calls: assistantMsg.tool_calls });
       toolResults.forEach(r => aiHistory.push(r));
 
       const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.groqKey },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
         body: JSON.stringify({
           model: 'llama-3.3-70b-versatile',
           messages: [
@@ -1970,7 +2387,7 @@ async function sendAI() {
     }
   } catch (err) {
     typing.remove();
-    appendAIMsg('assistant', '❌ Erreur de connexion. Vérifie ta clé API et ta connexion internet.');
+    appendAIMsg('assistant', '❌ Erreur de connexion. Vérifie ta connexion internet.');
     aiHistory.pop();
   }
 }
@@ -2016,6 +2433,7 @@ function addDebt() {
     paid: false,
     currency: data.profile.currency || 'HTG',
     affectsBalance: true,
+    remindedDismissedUntil: null,
   };
   data.debts.unshift(debt);
   // AFFECT BALANCE: emprunt reçu = revenu, dette = dépense
@@ -2032,6 +2450,8 @@ function addDebt() {
   data.transactions.unshift(balanceTx);
   save();
   document.getElementById('debt-amount').value = '';
+  const dhEl = document.getElementById('debt-amount-dh');
+  if (dhEl) dhEl.value = '';
   document.getElementById('debt-person').value = '';
   document.getElementById('debt-reason').value = '';
   document.getElementById('debt-due').value = '';
@@ -2041,28 +2461,74 @@ function addDebt() {
   if (currentPage === 'transactions') renderTransactions();
 }
 
-function toggleDebtPaid(id) {
+// Mark a debt paid/settled and reflect it on the balance as a real transaction
+function settleDebt(id, wasEarlyOrOnTime) {
   const debt = data.debts.find(d => d.id === id);
   if (!debt) return;
-  const wasPaid = debt.paid;
-  debt.paid = !wasPaid;
-  // When marking a debt as paid: add reverse transaction to show repayment
-  if (debt.paid && debt.affectsBalance) {
-    const reverseTx = {
+  debt.paid = true;
+  debt.paidDate = new Date().toISOString().split('T')[0];
+  const cur = debt.currency || data.profile.currency || 'HTG';
+  const today = debt.paidDate;
+
+  if (debt.type === 'owed_to_me') {
+    // Someone paid us back → money comes IN
+    const tx = {
       id: Date.now(),
-      type: debt.type === 'owed_by_me' ? 'expense' : 'income',
-      // owed_by_me (je devais) → je rembourse → expense reverse (already counted as expense when added)
-      // Actually: mark paid is just closing the debt, the balance was already adjusted at creation
-      // So no additional tx needed — just mark it resolved
-      amount: 0, date: new Date().toISOString().split('T')[0],
-      category: debt.type === 'owed_by_me' ? 'Remboursement dette' : 'Emprunt reçu',
-      note: `✅ Payé — ${debt.person} (clôturé)`, currency: debt.currency, debtRef: id,
+      type: 'income',
+      amount: debt.amount,
+      date: today,
+      category: 'Remboursement',
+      note: `Dette de ${debt.person}, payé le ${new Date(today).toLocaleDateString('fr-FR')}`,
+      currency: cur,
+      debtRef: debt.id,
     };
-    // Don't add a new tx — the original already impacted balance at creation
+    data.transactions.unshift(tx);
+    showToast(`✅ ${debt.person} t'a remboursé ${fmtNum(debt.amount)} ${cur} !`, 'success');
+  } else {
+    // We paid back a debt → money goes OUT
+    const tx = {
+      id: Date.now(),
+      type: 'expense',
+      amount: debt.amount,
+      date: today,
+      category: 'Remboursement dette',
+      note: `Paiement à ${debt.person}, réglé le ${new Date(today).toLocaleDateString('fr-FR')}`,
+      currency: cur,
+      debtRef: debt.id,
+    };
+    data.transactions.unshift(tx);
+    showToast(`✅ Tu as remboursé ${debt.person} !`, 'success');
   }
   save();
   renderHome();
   if (currentPage === 'transactions') renderTransactions();
+}
+
+// Extend a debt's due date by N days ("pas encore payé, rajoute X jours")
+function extendDebtDueDate(id, extraDays) {
+  const debt = data.debts.find(d => d.id === id);
+  if (!debt) return;
+  const base = debt.due ? new Date(debt.due) : new Date();
+  base.setDate(base.getDate() + extraDays);
+  debt.due = base.toISOString().split('T')[0];
+  debt.remindedDismissedUntil = null;
+  save();
+  showToast(`📅 Échéance repoussée de ${extraDays} jours`, 'success');
+  renderHome();
+  if (currentPage === 'transactions') renderTransactions();
+}
+
+function toggleDebtPaid(id) {
+  const debt = data.debts.find(d => d.id === id);
+  if (!debt) return;
+  if (!debt.paid) {
+    settleDebt(id, true);
+  } else {
+    debt.paid = false;
+    save();
+    renderHome();
+    if (currentPage === 'transactions') renderTransactions();
+  }
 }
 
 function deleteDebt(id) {
@@ -2078,12 +2544,14 @@ function debtHTML(d) {
   const isOwed = d.type === 'owed_by_me';
   const col = isOwed ? 'var(--red)' : 'var(--green)';
   const bg = isOwed ? 'var(--red-dim)' : 'var(--green-dim)';
-  const icon = isOwed ? '🔴' : '🟢';
+  const icon = isOwed
+    ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>'
+    : '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>';
   const label = isOwed ? 'Je dois à' : 'Me doit';
   const today = new Date().toISOString().split('T')[0];
   const overdue = d.due && d.due < today && !d.paid;
   return `<div class="tx-item" style="${d.paid ? 'opacity:.5;' : ''}">
-    <div class="tx-icon" style="background:${bg};font-size:16px;">${icon}</div>
+    <div class="tx-icon" style="background:${bg};color:${col};">${icon}</div>
     <div class="tx-info">
       <div class="tx-name" style="font-weight:600;">${d.person}</div>
       <div class="tx-date">${label} · ${d.reason || 'Aucune raison'}</div>
@@ -2097,6 +2565,48 @@ function debtHTML(d) {
       </div>
     </div>
   </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DEBT DUE-DATE REMINDER POPUPS (shown in Santé Financière)
+// ═══════════════════════════════════════════════════════════════
+function renderDebtReminders() {
+  const zone = document.getElementById('debt-reminders-zone');
+  if (!zone) return;
+  const today = new Date().toISOString().split('T')[0];
+  const cur = data.profile.currency || 'HTG';
+
+  // Debts due today or overdue, still unpaid, with a due date set
+  const dueDebts = data.debts.filter(d => !d.paid && d.due && d.due <= today);
+
+  if (!dueDebts.length) { zone.innerHTML = ''; return; }
+
+  zone.innerHTML = dueDebts.map(d => {
+    const isOverdue = d.due < today;
+    if (d.type === 'owed_to_me') {
+      // Someone owes US money
+      return `<div style="margin-top:12px;padding:14px;background:var(--amber-dim);border:1px solid rgba(245,158,11,0.3);border-radius:12px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">
+          🤔 Est-ce que <strong>${d.person}</strong> t'a rendu les <strong>${fmtNum(d.amount)} ${cur}</strong> ${isOverdue ? '(échéance dépassée)' : "aujourd'hui"} ?
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="extendDebtDueDate(${d.id}, 7)" style="flex:1;padding:9px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-2);font-size:12px;font-weight:600;cursor:pointer;">Pas encore, +7 jours</button>
+          <button onclick="settleDebt(${d.id}, true)" style="flex:1;padding:9px;border-radius:8px;background:var(--green-dim);border:1px solid var(--green);color:var(--green);font-size:12px;font-weight:600;cursor:pointer;">✓ Oui, il m'a payé</button>
+        </div>
+      </div>`;
+    } else {
+      // We owe money
+      return `<div style="margin-top:12px;padding:14px;background:var(--red-dim);border:1px solid rgba(239,68,68,0.3);border-radius:12px;">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">
+          🥶 Aïe aïe aïe... t'as pas encore payé <strong>${fmtNum(d.amount)} ${cur}</strong> à <strong>${d.person}</strong> ?
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button onclick="extendDebtDueDate(${d.id}, 7)" style="flex:1;padding:9px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-2);font-size:12px;font-weight:600;cursor:pointer;">Rajoute 7 jours</button>
+          <button onclick="settleDebt(${d.id}, true)" style="flex:1;padding:9px;border-radius:8px;background:var(--red-dim);border:1px solid var(--red);color:var(--red);font-size:12px;font-weight:600;cursor:pointer;">✓ Payé maintenant</button>
+        </div>
+      </div>`;
+    }
+  }).join('');
 }
 
 function renderDebtsPreview() {
@@ -2125,7 +2635,7 @@ function renderDebtsPreview() {
   }
   html += data.debts.slice(0, 3).map(debtHTML).join('');
   if (data.debts.length > 3) {
-    html += `<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--violet-soft);cursor:pointer;" onclick="openDebtsPage()">Voir tout (${data.debts.length}) →</div>`;
+    html += `<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--violet-soft);cursor:pointer;" onclick="navigate('transactions');filterTx('debt', document.querySelectorAll('.tabs .tab')[3])">Voir tout (${data.debts.length}) →</div>`;
   }
   el.innerHTML = html;
 }
@@ -2138,6 +2648,7 @@ function fmtNum(n) {
   if (n >= 1000) return Math.round(n).toLocaleString('fr-FR');
   return Math.round(n).toString();
 }
+function fmt(n) { return fmtNum(n); }
 
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
@@ -2406,7 +2917,12 @@ function renderConverterPage() {
 let isDark = DB.get('theme', 'dark') !== 'light';
 function applyTheme() {
   document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  document.getElementById('theme-btn').textContent = isDark ? '🌙' : '☀️';
+  const icon = document.getElementById('theme-icon');
+  if (icon) {
+    icon.innerHTML = isDark
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  }
   DB.set('theme', isDark ? 'dark' : 'light');
 }
 function toggleTheme() { isDark = !isDark; applyTheme(); }
@@ -2420,9 +2936,9 @@ async function sendAIHero() {
   const input = document.getElementById('ai-hero-input');
   const msg = input.value.trim();
   if (!msg) return;
-  if (!data.groqKey) {
+  if (!hasValidApiKey()) {
     document.getElementById('ai-hero-response').style.display = 'block';
-    document.getElementById('ai-hero-response').textContent = '⚠️ Configure ta clé Groq API dans la section IA pour activer le conseiller.';
+    document.getElementById('ai-hero-response').textContent = '⚠️ Le conseiller IA n\'est pas encore configuré sur ce site.';
     return;
   }
   aiHeroLoading = true;
@@ -2433,7 +2949,7 @@ async function sendAIHero() {
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + data.groqKey },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
         messages: [
@@ -2473,6 +2989,9 @@ function openGoalDeposit(goalId) {
   const cur = data.profile.currency || 'HTG';
   document.getElementById('deposit-currency-prefix').textContent = cur;
   document.getElementById('deposit-amount').value = '';
+  const dhEl = document.getElementById('deposit-amount-dh');
+  if (dhEl) dhEl.value = '';
+  updateDHRowsVisibility();
   document.getElementById('overlay-goal-deposit').classList.add('open');
 }
 
@@ -2513,6 +3032,8 @@ function addGoal() {
   document.getElementById('goal-initial-saved').value = '';
   document.getElementById('goal-deadline').value = '';
   document.getElementById('goal-emoji').value = '';
+  const dh1 = document.getElementById('goal-target-dh'); if (dh1) dh1.value = '';
+  const dh2 = document.getElementById('goal-initial-saved-dh'); if (dh2) dh2.value = '';
   showToast('🎯 Objectif créé !', 'success');
   renderGoals();
 }
@@ -2529,6 +3050,7 @@ function renderGoals() {
   const cur = data.profile.currency || 'HTG';
   // Update currency prefixes for goal drawers
   document.querySelectorAll('#goal-currency-prefix,#goal-saved-prefix').forEach(el => el.textContent = cur);
+  updateDHRowsVisibility();
 
   const totalSaved = data.goals.reduce((s, g) => s + g.saved, 0);
   const activeCount = data.goals.filter(g => g.saved < g.target).length;
@@ -2580,10 +3102,9 @@ function renderGoals() {
 // ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
+populateCategorySelects();
 renderHome();
 applyTheme();
-// Load Groq key into field if present
-if (data.groqKey) document.getElementById('groq-key').value = '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';
 </script>
 </body>
-  </html>
+</html>
