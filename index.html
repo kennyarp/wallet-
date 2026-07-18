@@ -8,7 +8,14 @@
 <meta property="og:title" content="Wallet — Portefeuille Intelligent">
 <meta property="og:description" content="Gère tes revenus, dépenses, dettes, objectifs et budgets avec un conseiller IA.">
 <meta property="og:image" content="https://i.postimg.cc/sXz7R2wM/file-000000006e68722f85fb43e2c0fdb6d7.png">
+<meta property="og:image:secure_url" content="https://i.postimg.cc/sXz7R2wM/file-000000006e68722f85fb43e2c0fdb6d7.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Wallet — Portefeuille Intelligent">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Wallet">
+<meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Wallet — Portefeuille Intelligent">
 <meta name="twitter:description" content="Gère tes revenus, dépenses, dettes, objectifs et budgets avec un conseiller IA.">
@@ -810,7 +817,7 @@ textarea { resize: none; min-height: 80px; }
 
       <!-- Ce que l'IA peut faire -->
       <div style="background:var(--violet-dim);border:1px solid rgba(124,58,237,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;color:var(--violet-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">⚡ L'IA peut créer directement</div>
+        <div style="font-size:11px;font-weight:700;color:var(--violet-soft);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">⚡ L'IA peut préparer directement (avec ta confirmation)</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">
           <span style="font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">💰 Revenus</span>
           <span style="font-size:11px;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 8px;">💸 Dépenses</span>
@@ -826,7 +833,7 @@ textarea { resize: none; min-height: 80px; }
       <!-- Chat -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
         <div class="ai-messages" id="ai-messages" style="max-height:55vh;">
-          <div class="msg msg-ai">Salut ! 👋 Je suis ton conseiller financier IA avec <strong>accès complet à tes données</strong>.<br><br>Je peux analyser tes finances ET créer directement des éléments pour toi. Dis-moi par exemple :<br>• <em>"J'ai dépensé 500 HTG en transport"</em><br>• <em>"Crée un objectif d'épargne pour un téléphone à 15000 HTG"</em><br>• <em>"Mets un budget alimentation de 3000 HTG"</em><br>• <em>"Analyse mes dépenses et donne-moi un plan"</em></div>
+          <div class="msg msg-ai">Salut ! 👋 Je suis ton conseiller financier IA avec <strong>accès complet à tes données</strong>.<br><br>Je peux analyser tes finances ET préparer directement des éléments pour toi — tu confirmeras toujours avant qu'une action soit appliquée. Dis-moi par exemple :<br>• <em>"J'ai dépensé 500 HTG en transport"</em><br>• <em>"Crée un objectif d'épargne pour un téléphone à 15000 HTG"</em><br>• <em>"Mets un budget alimentation de 3000 HTG"</em><br>• <em>"Analyse mes dépenses et donne-moi un plan"</em></div>
         </div>
         <div style="padding:10px;border-top:1px solid var(--border);">
           <div class="ai-input-row">
@@ -1305,7 +1312,7 @@ textarea { resize: none; min-height: 80px; }
 //  ⚙️ CONFIG — Remplace la ligne ci-dessous par ta propre clé Groq
 //  Obtiens une clé gratuite sur https://console.groq.com
 // ═══════════════════════════════════════════════════════════════
-const GROQ_API_KEY = "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";
+const GROQ_API_KEY = "999999999";
 
 // ═══════════════════════════════════════════════════════════════
 //  DATA LAYER — localStorage persistence
@@ -1980,9 +1987,10 @@ const QUICK_PROMPTS = [
 ];
 
 let aiHistory = [];
+let pendingBatches = {}; // batchId -> { toolCalls: [], results: {}, resolved: 0 }
 
 function hasValidApiKey() {
-  return GROQ_API_KEY && GROQ_API_KEY !== 'COLLE_TA_CLE_GROQ_ICI' && GROQ_API_KEY.trim().length > 0;
+  return GROQ_API_KEY && GROQ_API_KEY !== 'COLLE_TA_CLE_GROQ_ICI' && GROQ_API_KEY !== '999999999' && GROQ_API_KEY.trim().length > 0;
 }
 
 function renderAIPage() {
@@ -2052,7 +2060,20 @@ function buildFinanceContext() {
     return `${b.category}: ${fmtNum(spent)}/${fmtNum(b.limit)} ${cur} (${Math.round((spent/b.limit)*100)}%)`;
   }).join('\n') || 'Aucun budget';
 
+  const now = new Date();
+  const nowStr = now.toLocaleString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
   return `Tu es un conseiller financier personnel bienveillant, direct et expert. Tu as accès à TOUTES les données financières de l'utilisateur. Réponds en français, de manière personnalisée et actionnable. Utilise des emojis pour rendre la réponse lisible sur mobile. Maximum 250 mots.
+
+═══ DATE ET HEURE ACTUELLES ═══
+${nowStr}
+Utilise toujours cette date/heure comme référence de "maintenant". Si l'utilisateur ne précise pas de date pour une transaction, utilise aujourd'hui.
+
+═══ RÈGLES POUR LES ACTIONS (outils) ═══
+- Chaque outil que tu appelles déclenche un pop-up de confirmation affiché à l'utilisateur : il devra cliquer "Confirmer" ou "Annuler" avant que quoi que ce soit ne soit réellement enregistré. Tu peux donc proposer une action librement, elle ne sera jamais appliquée sans l'accord explicite de l'utilisateur.
+- Avant de créer une dette (ajouter_dette), il est ESSENTIEL de savoir avec QUI (person). Si l'utilisateur ne l'a pas précisé, pose-lui la question au lieu d'appeler l'outil avec une valeur inventée.
+- Ne devine jamais un montant, une catégorie ou une personne : si une information nécessaire manque, demande-la clairement avant d'appeler un outil.
+- Si l'utilisateur ne précise pas de date/heure, utilise la date du jour ci-dessus (ne jamais inventer une date différente).
 
 ═══ PROFIL ═══
 - Nom : ${data.profile.name || 'Inconnu'}
@@ -2088,18 +2109,18 @@ ${goalsDetail}
 ═══ BUDGETS ═══
 ${budgetsDetail}
 
-L'utilisateur peut te demander de créer des objectifs, analyser ses dépenses, calculer des délais, ou tout autre conseil financier. Sois précis et utilise les chiffres réels ci-dessus dans ta réponse. Quand tu utilises un outil pour créer une transaction, un objectif, un budget, ou une dette, confirme clairement ce qui a été créé.`;
+L'utilisateur peut te demander de créer des objectifs, analyser ses dépenses, calculer des délais, ou tout autre conseil financier. Sois précis et utilise les chiffres réels ci-dessus dans ta réponse. Quand tu utilises un outil, explique brièvement ce que tu proposes — le pop-up de confirmation affichera les détails, donc pas besoin de tout répéter.`;
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  AI TOOLS — fonctions que l'IA peut appeler directement
+//  AI TOOLS — fonctions que l'IA peut appeler (avec confirmation utilisateur)
 // ═══════════════════════════════════════════════════════════════
 const AI_TOOLS = [
   {
     type: 'function',
     function: {
       name: 'ajouter_transaction',
-      description: 'Ajoute une transaction (revenu ou dépense) dans le portefeuille',
+      description: 'Propose d\'ajouter une transaction (revenu ou dépense) dans le portefeuille. Sera soumis à confirmation de l\'utilisateur.',
       parameters: {
         type: 'object',
         properties: {
@@ -2117,7 +2138,7 @@ const AI_TOOLS = [
     type: 'function',
     function: {
       name: 'creer_objectif',
-      description: 'Crée un objectif d\'épargne',
+      description: 'Propose de créer un objectif d\'épargne. Sera soumis à confirmation de l\'utilisateur.',
       parameters: {
         type: 'object',
         properties: {
@@ -2135,7 +2156,7 @@ const AI_TOOLS = [
     type: 'function',
     function: {
       name: 'creer_budget',
-      description: 'Crée ou met à jour un budget mensuel pour une catégorie',
+      description: 'Propose de créer ou mettre à jour un budget mensuel pour une catégorie. Sera soumis à confirmation de l\'utilisateur.',
       parameters: {
         type: 'object',
         properties: {
@@ -2150,13 +2171,13 @@ const AI_TOOLS = [
     type: 'function',
     function: {
       name: 'ajouter_dette',
-      description: 'Enregistre une dette ou créance (affecte le solde)',
+      description: 'Propose d\'enregistrer une dette ou créance (affecte le solde). Il FAUT connaître le nom de la personne (person) avant d\'appeler cet outil — demande-le si tu ne le connais pas. Sera soumis à confirmation de l\'utilisateur.',
       parameters: {
         type: 'object',
         properties: {
           type: { type: 'string', enum: ['owed_by_me', 'owed_to_me'], description: 'owed_by_me = je dois, owed_to_me = on me doit' },
           amount: { type: 'number', description: 'Montant' },
-          person: { type: 'string', description: 'Nom de la personne ou organisme' },
+          person: { type: 'string', description: 'Nom de la personne ou organisme (obligatoire, demande-le si inconnu)' },
           reason: { type: 'string', description: 'Raison ou description' },
           due: { type: 'string', description: 'Date d\'échéance YYYY-MM-DD (optionnel)' },
         },
@@ -2168,7 +2189,7 @@ const AI_TOOLS = [
     type: 'function',
     function: {
       name: 'deposer_dans_objectif',
-      description: 'Ajoute de l\'épargne dans un objectif existant',
+      description: 'Propose d\'ajouter de l\'épargne dans un objectif existant. Sera soumis à confirmation de l\'utilisateur.',
       parameters: {
         type: 'object',
         properties: {
@@ -2181,7 +2202,37 @@ const AI_TOOLS = [
   },
 ];
 
-// Exécute un tool call de l'IA
+// Construit une description lisible (FR) d'un appel d'outil, pour le pop-up de confirmation
+function describeToolCall(name, args) {
+  const cur = data.profile.currency || 'HTG';
+  const today = new Date().toISOString().split('T')[0];
+  const dateStr = (args.date && args.date.length) ? args.date : today;
+  const dateLabel = new Date(dateStr).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  if (name === 'ajouter_transaction') {
+    const isIncome = args.type === 'income';
+    return `${isIncome ? '➕ Ajouter un revenu' : '➖ Ajouter une dépense'} de <strong>${fmtNum(args.amount)} ${cur}</strong><br>
+    Catégorie : ${args.category || '—'}${args.note ? '<br>Note : ' + args.note : ''}<br>
+    Date : ${dateLabel}`;
+  }
+  if (name === 'creer_objectif') {
+    return `🎯 Créer l'objectif d'épargne <strong>"${args.name}"</strong>${args.emoji ? ' ' + args.emoji : ''}<br>
+    Cible : ${fmtNum(args.target)} ${cur}${args.initial_saved ? '<br>Déjà épargné : ' + fmtNum(args.initial_saved) + ' ' + cur : ''}${args.deadline ? '<br>Délai : ' + new Date(args.deadline).toLocaleDateString('fr-FR') : ''}`;
+  }
+  if (name === 'creer_budget') {
+    return `📊 Définir un budget de <strong>${fmtNum(args.limit)} ${cur}/mois</strong> pour la catégorie <strong>${args.category}</strong>`;
+  }
+  if (name === 'ajouter_dette') {
+    const label = args.type === 'owed_by_me' ? 'Je dois' : 'On me doit';
+    return `💳 Enregistrer une dette : <strong>${label} ${fmtNum(args.amount)} ${cur}</strong> ${args.type === 'owed_by_me' ? 'à' : 'de'} <strong>${args.person}</strong>${args.reason ? '<br>Raison : ' + args.reason : ''}${args.due ? '<br>Échéance : ' + new Date(args.due).toLocaleDateString('fr-FR') : ''}<br><span style="font-size:11px;color:var(--text-3);">Ceci ajustera aussi ton solde.</span>`;
+  }
+  if (name === 'deposer_dans_objectif') {
+    return `💰 Ajouter <strong>${fmtNum(args.amount)} ${cur}</strong> à l'objectif <strong>"${args.goal_name}"</strong>`;
+  }
+  return `Action : ${name}`;
+}
+
+// Exécute réellement un tool call de l'IA (appelé uniquement après confirmation utilisateur)
 function executeAITool(name, args) {
   const cur = data.profile.currency || 'HTG';
   const today = new Date().toISOString().split('T')[0];
@@ -2282,16 +2333,103 @@ function executeAITool(name, args) {
   return `❌ Outil inconnu : ${name}`;
 }
 
-function renderToolResult(result) {
+// Affiche un pop-up de confirmation dans le chat pour un tool call donné
+function renderToolConfirmCard(tc, batchId) {
+  let args = {};
+  try { args = JSON.parse(tc.function.arguments || '{}'); } catch {}
+  const desc = describeToolCall(tc.function.name, args);
   const div = document.createElement('div');
-  div.style.cssText = 'margin:6px 0;padding:10px 12px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:10px;font-size:13px;color:var(--green);';
-  div.textContent = result;
+  div.className = 'msg msg-ai';
+  div.id = 'confirm-' + tc.id;
+  div.style.cssText = 'background:var(--violet-dim);border:1px solid rgba(124,58,237,0.35);max-width:92%;';
+  div.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:var(--violet-soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">🤖 L'IA propose une action</div>
+    <div style="font-size:13px;color:var(--text);margin-bottom:12px;line-height:1.6;">${desc}</div>
+    <div style="display:flex;gap:8px;" id="confirm-actions-${tc.id}">
+      <button onclick="resolveToolCall('${batchId}','${tc.id}',false)" style="flex:1;padding:9px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-2);font-size:12px;font-weight:600;cursor:pointer;">✕ Annuler</button>
+      <button onclick="resolveToolCall('${batchId}','${tc.id}',true)" style="flex:1;padding:9px;border-radius:8px;background:var(--violet);border:none;color:#fff;font-size:12px;font-weight:600;cursor:pointer;">✓ Confirmer</button>
+    </div>
+  `;
   document.getElementById('ai-messages').appendChild(div);
   document.getElementById('ai-messages').scrollTop = 99999;
 }
 
+// Appelé quand l'utilisateur clique Confirmer/Annuler sur un pop-up d'action
+async function resolveToolCall(batchId, toolCallId, confirmed) {
+  const batch = pendingBatches[batchId];
+  if (!batch) return;
+  const tc = batch.toolCalls.find(t => t.id === toolCallId);
+  if (!tc) return;
+
+  const actionsEl = document.getElementById('confirm-actions-' + toolCallId);
+  const cardEl = document.getElementById('confirm-' + toolCallId);
+  let resultText;
+
+  if (confirmed) {
+    let args = {};
+    try { args = JSON.parse(tc.function.arguments || '{}'); } catch {}
+    resultText = executeAITool(tc.function.name, args);
+    if (actionsEl) actionsEl.outerHTML = `<div style="font-size:12px;color:var(--green);font-weight:600;">${resultText}</div>`;
+  } else {
+    resultText = '❌ Action annulée par l\'utilisateur.';
+    if (actionsEl) actionsEl.outerHTML = `<div style="font-size:12px;color:var(--text-3);font-weight:600;">✕ Annulé</div>`;
+  }
+  if (cardEl) cardEl.style.opacity = '0.85';
+
+  batch.results[toolCallId] = resultText;
+  batch.resolved++;
+
+  if (batch.resolved >= batch.toolCalls.length) {
+    await continueAIBatch(batchId);
+  }
+}
+
+// Une fois tous les tool calls d'un lot résolus (confirmés/annulés), on relance l'IA avec les résultats
+async function continueAIBatch(batchId) {
+  const batch = pendingBatches[batchId];
+  if (!batch) return;
+  delete pendingBatches[batchId];
+
+  aiHistory.push({ role: 'assistant', content: batch.assistantContent || '', tool_calls: batch.toolCalls });
+  batch.toolCalls.forEach(tc => {
+    aiHistory.push({ role: 'tool', tool_call_id: tc.id, content: batch.results[tc.id] || '❌ Résultat indisponible' });
+  });
+
+  const typing = document.createElement('div');
+  typing.className = 'msg msg-ai msg-typing';
+  typing.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+  document.getElementById('ai-messages').appendChild(typing);
+  document.getElementById('ai-messages').scrollTop = 99999;
+
+  try {
+    const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: buildFinanceContext() },
+          ...aiHistory.slice(-14),
+        ],
+        max_tokens: 300,
+        temperature: 0.7,
+      }),
+    });
+    const json2 = await res2.json();
+    typing.remove();
+    const reply2 = json2.choices?.[0]?.message?.content;
+    if (reply2) {
+      appendAIMsg('assistant', reply2);
+      aiHistory.push({ role: 'assistant', content: reply2 });
+    }
+  } catch (e) {
+    typing.remove();
+  }
+}
+
 function clearAIChat() {
   aiHistory = [];
+  pendingBatches = {};
   const el = document.getElementById('ai-messages');
   el.innerHTML = '<div class="msg msg-ai">Chat vidé. Comment puis-je t\'aider ?</div>';
 }
@@ -2341,44 +2479,18 @@ async function sendAI() {
     const choice = json.choices?.[0];
     const assistantMsg = choice?.message;
 
-    // Handle tool calls
+    // Handle tool calls → show confirmation pop-ups instead of executing immediately
     if (assistantMsg?.tool_calls?.length) {
-      // Show text part if any
       if (assistantMsg.content) appendAIMsg('assistant', assistantMsg.content);
 
-      // Build tool_results messages for follow-up
-      const toolResults = [];
-      for (const tc of assistantMsg.tool_calls) {
-        let args = {};
-        try { args = JSON.parse(tc.function.arguments); } catch {}
-        const result = executeAITool(tc.function.name, args);
-        renderToolResult(result);
-        toolResults.push({ role: 'tool', tool_call_id: tc.id, content: result });
-      }
-
-      // Follow-up call so IA confirms what il a fait
-      aiHistory.push({ role: 'assistant', content: assistantMsg.content || '', tool_calls: assistantMsg.tool_calls });
-      toolResults.forEach(r => aiHistory.push(r));
-
-      const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            { role: 'system', content: buildFinanceContext() },
-            ...aiHistory.slice(-12),
-          ],
-          max_tokens: 300,
-          temperature: 0.7,
-        }),
-      });
-      const json2 = await res2.json();
-      const reply2 = json2.choices?.[0]?.message?.content;
-      if (reply2) {
-        appendAIMsg('assistant', reply2);
-        aiHistory.push({ role: 'assistant', content: reply2 });
-      }
+      const batchId = 'b' + Date.now();
+      pendingBatches[batchId] = {
+        toolCalls: assistantMsg.tool_calls,
+        assistantContent: assistantMsg.content || '',
+        results: {},
+        resolved: 0,
+      };
+      assistantMsg.tool_calls.forEach(tc => renderToolConfirmCard(tc, batchId));
     } else {
       // Normal text reply
       const reply = assistantMsg?.content || 'Pas de réponse.';
@@ -3107,4 +3219,4 @@ renderHome();
 applyTheme();
 </script>
 </body>
-</html>
+  </html>
