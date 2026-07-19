@@ -909,7 +909,7 @@ setTimeout(function () {
       <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
         <div>
           <h1>IA Conseiller 🤖</h1>
-          <p style="font-size:12px;color:var(--text-3);margin-top:4px;">Groq · Llama 3 · Accès complet à tes données</p>
+          <p style="font-size:12px;color:var(--text-3);margin-top:4px;">OpenRouter · Llama 3.3 · Accès complet à tes données</p>
         </div>
         <button onclick="clearAIChat()" style="font-size:11px;padding:6px 12px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text-3);cursor:pointer;">🗑 Vider</button>
       </div>
@@ -1415,10 +1415,20 @@ setTimeout(function () {
 
 <script>
 // ═══════════════════════════════════════════════════════════════
-//  ⚙️ CONFIG — Remplace la ligne ci-dessous par ta propre clé Groq
-//  Obtiens une clé gratuite sur https://console.groq.com
+//  ⚙️ CONFIG — Remplace la ligne ci-dessous par ta propre clé OpenRouter
+//  Obtiens une clé gratuite sur https://openrouter.ai/keys
 // ═══════════════════════════════════════════════════════════════
-const GROQ_API_KEY = "999999999";
+const OPENROUTER_API_KEY = "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";
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+function openRouterHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + OPENROUTER_API_KEY,
+    'HTTP-Referer': window.location.href,
+    'X-Title': 'Wallet — Portefeuille Intelligent',
+  };
+}
 
 // ═══════════════════════════════════════════════════════════════
 //  DATA LAYER — localStorage persistence
@@ -2133,7 +2143,7 @@ function toggleBalanceVisibility() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  AI ADVISOR (Groq)
+//  AI ADVISOR (OpenRouter)
 // ═══════════════════════════════════════════════════════════════
 const QUICK_PROMPTS = [
   '📊 Analyse mes finances du mois',
@@ -2147,7 +2157,7 @@ let aiHistory = [];
 let pendingBatches = {}; // batchId -> { toolCalls: [], results: {}, resolved: 0 }
 
 function hasValidApiKey() {
-  return GROQ_API_KEY && GROQ_API_KEY !== 'COLLE_TA_CLE_GROQ_ICI' && GROQ_API_KEY !== '999999999' && GROQ_API_KEY.trim().length > 0;
+  return OPENROUTER_API_KEY && OPENROUTER_API_KEY !== 'COLLE_TA_CLE_OPENROUTER_ICI' && OPENROUTER_API_KEY !== '999999999' && OPENROUTER_API_KEY.trim().length > 0;
 }
 
 function renderAIPage() {
@@ -2559,11 +2569,11 @@ async function continueAIBatch(batchId) {
   document.getElementById('ai-messages').scrollTop = 99999;
 
   try {
-    const res2 = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res2 = await fetch(OPENROUTER_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+      headers: openRouterHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: OPENROUTER_MODEL,
         messages: [
           { role: 'system', content: buildFinanceContext() },
           ...aiHistory.slice(-14),
@@ -2608,11 +2618,11 @@ async function sendAI() {
   document.getElementById('ai-messages').scrollTop = 99999;
 
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res = await fetch(OPENROUTER_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+      headers: openRouterHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: OPENROUTER_MODEL,
         messages: [
           { role: 'system', content: buildFinanceContext() },
           ...aiHistory.slice(-10),
@@ -3216,11 +3226,11 @@ async function sendAIHero() {
   respEl.textContent = '⏳ Analyse en cours...';
   input.value = '';
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const res = await fetch(OPENROUTER_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + GROQ_API_KEY },
+      headers: openRouterHeaders(),
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: OPENROUTER_MODEL,
         messages: [
           { role: 'system', content: buildFinanceContext() },
           { role: 'user', content: msg }
