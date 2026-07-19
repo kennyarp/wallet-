@@ -556,9 +556,114 @@ textarea { resize: none; min-height: 80px; }
 @media (max-width: 767px) {
   .desktop-sidebar { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPATIBILITÉ — anciens appareils / WebView datée (Android 8+)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Fallback quand backdrop-filter n'est pas supporté : fond plein
+   au lieu du verre dépoli, pour ne pas se retrouver avec un fond
+   quasi transparent illisible sur les vieux WebView. */
+@supports not (backdrop-filter: blur(1px)) and not (-webkit-backdrop-filter: blur(1px)) {
+  #bottom-nav { background: #14141f; }
+  .app-header { background: #17111f; }
+  .hero-card { background: #1a0f3a; }
+}
+
+/* Very small / low-res phones (common on older Android 8 budget
+   devices, e.g. 320-360px wide screens) */
+@media (max-width: 360px) {
+  .hero-amount { font-size: 34px; }
+  .quick-icon { width: 32px; height: 32px; }
+  .card { padding: 13px; }
+  #bottom-nav { width: calc(100% - 12px); }
+  .nav-item span { font-size: 8.5px; }
+}
+
+/* Respect "reduce motion" — also lightens GPU/CPU load on older
+   or low-end hardware. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SKELETON SCREENS
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+.sk {
+  background: var(--surface2);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+.sk::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+[data-theme="light"] .sk::after { background: linear-gradient(90deg, transparent 0%, rgba(0,0,0,0.04) 50%, transparent 100%); }
+.sk-line { height: 12px; margin-bottom: 8px; }
+.sk-line.w60 { width: 60%; }
+.sk-line.w40 { width: 40%; }
+.sk-line.w80 { width: 80%; }
+.sk-circle { border-radius: 50%; flex-shrink: 0; }
+.sk-card { padding: 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 12px; }
+.sk-row { display: flex; align-items: center; gap: 12px; padding: 11px 8px; }
+.sk-row-info { flex: 1; }
+
+/* Boot skeleton — covers the whole screen instantly, before any
+   JS has run, so there's never a blank white/black flash on slow
+   devices while the app boots. */
+#boot-skeleton {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  overflow: hidden;
+  padding: 16px;
+  transition: opacity .25s ease, visibility .25s ease;
+}
+#boot-skeleton.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+#boot-skeleton .sk-header { height: 64px; border-radius: 18px; margin-bottom: 12px; }
+#boot-skeleton .sk-hero { height: 168px; border-radius: 20px; margin-bottom: 12px; }
+#boot-skeleton .sk-health { height: 118px; border-radius: 18px; margin-bottom: 12px; }
+#boot-skeleton .sk-quick { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+#boot-skeleton .sk-quick .sk { height: 66px; border-radius: 16px; }
+#boot-skeleton .sk-list-card { height: 150px; border-radius: 18px; margin-bottom: 12px; }
 </style>
 </head>
 <body>
+
+<!-- ═══════════════════ BOOT SKELETON — visible instantanément ═══════════════════ -->
+<div id="boot-skeleton">
+  <div class="sk sk-header"></div>
+  <div class="sk sk-hero"></div>
+  <div class="sk sk-health"></div>
+  <div class="sk-quick">
+    <div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div>
+  </div>
+  <div class="sk sk-list-card"></div>
+  <div class="sk sk-list-card"></div>
+</div>
+<script>
+// Filet de sécurité : si le script principal plante ou met trop de
+// temps (vieux téléphone très lent), on force la disparition du
+// skeleton après 4s max pour ne jamais bloquer l'utilisateur dessus.
+setTimeout(function () {
+  var boot = document.getElementById('boot-skeleton');
+  if (boot && !boot.classList.contains('hide')) {
+    boot.classList.add('hide');
+    setTimeout(function () { boot.remove(); }, 300);
+  }
+}, 4000);
+</script>
 
 <div class="dashboard-shell">
 <aside class="dashboard-side">
@@ -1370,6 +1475,57 @@ const pages = ['home', 'transactions', 'budgets', 'goals', 'ai', 'profile'];
 let currentPage = 'home';
 let txFilter = 'all';
 
+// ═══════════════════════════════════════════════════════════════
+//  SKELETON LOADING HELPERS
+// ═══════════════════════════════════════════════════════════════
+// Minimum time a skeleton stays visible so the transition feels
+// intentional instead of a jarring instant swap (also masks any
+// real render jank on slower/older devices).
+const SKELETON_MIN_MS = 260;
+
+function skeletonRowsHTML(kind, count) {
+  const rows = [];
+  for (let i = 0; i < count; i++) {
+    if (kind === 'tx') {
+      rows.push(`<div class="sk-row">
+        <div class="sk sk-circle" style="width:40px;height:40px;"></div>
+        <div class="sk-row-info">
+          <div class="sk sk-line w60"></div>
+          <div class="sk sk-line w40" style="margin-bottom:0;"></div>
+        </div>
+        <div class="sk" style="width:52px;height:16px;"></div>
+      </div>`);
+    } else if (kind === 'budget') {
+      rows.push(`<div class="sk-card">
+        <div class="sk sk-line w40"></div>
+        <div class="sk" style="height:10px;border-radius:20px;margin-top:10px;"></div>
+      </div>`);
+    } else if (kind === 'goal') {
+      rows.push(`<div class="sk-card">
+        <div class="sk" style="width:28px;height:28px;border-radius:8px;margin-bottom:10px;"></div>
+        <div class="sk sk-line w60"></div>
+        <div class="sk sk-line w80"></div>
+        <div class="sk" style="height:8px;border-radius:4px;margin-top:6px;"></div>
+      </div>`);
+    }
+  }
+  return rows.join('');
+}
+
+// Shows a skeleton in `containerId` immediately, waits at least
+// SKELETON_MIN_MS, then runs the real render function.
+function renderWithSkeleton(containerId, kind, count, renderFn) {
+  const el = document.getElementById(containerId);
+  if (!el) { renderFn(); return; }
+  el.innerHTML = skeletonRowsHTML(kind, count);
+  const start = Date.now();
+  requestAnimationFrame(() => {
+    const elapsed = Date.now() - start;
+    const wait = Math.max(0, SKELETON_MIN_MS - elapsed);
+    setTimeout(renderFn, wait);
+  });
+}
+
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1382,11 +1538,11 @@ function navigate(page) {
   currentPage = page;
   document.getElementById('app').scrollTo(0, 0);
   if (page === 'home') renderHome();
-  if (page === 'transactions') renderTransactions();
-  if (page === 'budgets') renderBudgets();
+  if (page === 'transactions') renderWithSkeleton('all-tx-list', 'tx', 5, renderTransactions);
+  if (page === 'budgets') renderWithSkeleton('budgets-full-list', 'budget', 3, renderBudgets);
   if (page === 'profile') renderProfile();
   if (page === 'ai') renderAIPage();
-  if (page === 'goals') renderGoals();
+  if (page === 'goals') renderWithSkeleton('goals-list', 'goal', 2, renderGoals);
   if (page === 'converter') renderConverterPage();
 }
 
@@ -3218,6 +3374,20 @@ function renderGoals() {
 populateCategorySelects();
 renderHome();
 applyTheme();
+
+// Hide the boot skeleton once the home page has actually painted.
+// requestAnimationFrame (x2) waits for the real content to be on
+// screen before fading the skeleton out, which avoids any flash
+// of empty content on slower devices.
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    const boot = document.getElementById('boot-skeleton');
+    if (boot) {
+      boot.classList.add('hide');
+      setTimeout(() => boot.remove(), 300);
+    }
+  });
+});
 </script>
 </body>
 </html>
